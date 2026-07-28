@@ -235,7 +235,7 @@ export default function HowItWorks() {
               Get Your Score
             </Link>
             <Link href="/directory" className="w-full sm:w-auto text-center border border-white/[0.05] bg-white/[0.02] text-white px-6 py-3 text-sm font-medium rounded-lg hover:bg-white/[0.04] active:scale-98 transition-all duration-300">
-              Explore Protocol
+              Explore Registered Profiles
             </Link>
           </motion.div>
 

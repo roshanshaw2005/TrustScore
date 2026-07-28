@@ -376,12 +376,12 @@ export default function About() {
                   </div>
                   <div className="flex gap-4">
                     <div className="text-center">
-                      <p className="text-[#00FFA3] text-xl font-bold">$12M+</p>
+                      <p className="text-[#00FFA3] text-xl font-bold">$1M+</p>
                       <p className="text-[rgba(255,255,255,0.3)] text-xs font-mono">Verified Pipeline</p>
                     </div>
                     <div className="w-px bg-[rgba(255,255,255,0.05)]" />
                     <div className="text-center">
-                      <p className="text-[#00E5FF] text-xl font-bold">2.4K+</p>
+                      <p className="text-[#00E5FF] text-xl font-bold">50+</p>
                       <p className="text-[rgba(255,255,255,0.3)] text-xs font-mono">Startups Verified</p>
                     </div>
                   </div>
