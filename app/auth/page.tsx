@@ -1,47 +1,209 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/client";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { PerspectiveCamera, Float, Sparkles, Torus, MeshDistortMaterial } from "@react-three/drei";
+import * as THREE from "three";
+import { motion } from "framer-motion";
+
+const AuthScene = () => {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const { mouse } = useThree();
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const x = (mouse.x - 0) * 0.15;
+      const y = (mouse.y - 0) * 0.1;
+      meshRef.current.rotation.x += (y - meshRef.current.rotation.x) * 0.02;
+      meshRef.current.rotation.y += (x - meshRef.current.rotation.y) * 0.02;
+      const time = state.clock.getElapsedTime();
+      meshRef.current.position.y = Math.sin(time * 0.3) * 0.08;
+    }
+  });
+
+  return (
+    <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.3}>
+      <mesh ref={meshRef} scale={1.8}>
+        <icosahedronGeometry args={[1, 1]} />
+        <MeshDistortMaterial
+          color="#00E5FF"
+          metalness={0.9}
+          roughness={0.05}
+          clearcoat={1}
+          clearcoatRoughness={0.05}
+          transparent
+          opacity={0.08}
+          distort={0.2}
+          speed={0.3}
+          emissive="#00E5FF"
+          emissiveIntensity={0.05}
+        />
+      </mesh>
+    </Float>
+  );
+};
+
+const BackgroundParticles = () => {
+  const particlesRef = useRef<THREE.Points>(null!);
+  const count = 100;
+  const positions = new Float32Array(count * 3);
+
+  useEffect(() => {
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+  }, []);
+
+  useFrame((state) => {
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y = state.clock.getElapsedTime() * 0.01;
+    }
+  });
+
+  return (
+    <points ref={particlesRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.015} transparent opacity={0.1} color="#00E5FF" sizeAttenuation />
+    </points>
+  );
+};
+
+const RingSystem = () => {
+  const ringRef = useRef<THREE.Mesh>(null!);
+
+  useFrame((state) => {
+    if (ringRef.current) {
+      ringRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.06) * 0.15;
+      ringRef.current.rotation.z = Math.cos(state.clock.getElapsedTime() * 0.05) * 0.1;
+    }
+  });
+
+  return (
+    <group ref={ringRef}>
+      <Torus args={[2.5, 0.015, 16, 100]} rotation={[Math.PI / 2, 0, 0]}>
+        <meshPhysicalMaterial color="#7000FF" emissive="#7000FF" emissiveIntensity={0.08} transparent opacity={0.08} metalness={0.8} roughness={0.2} />
+      </Torus>
+      <Torus args={[2.9, 0.01, 16, 100]} rotation={[Math.PI / 3, 0.15, 0]}>
+        <meshPhysicalMaterial color="#00FFA3" emissive="#00FFA3" emissiveIntensity={0.06} transparent opacity={0.05} metalness={0.8} roughness={0.2} />
+      </Torus>
+    </group>
+  );
+};
+
+const AuthBackground = () => {
+  return (
+    <div className="fixed inset-0 -z-10 pointer-events-none">
+      <Canvas style={{ background: "#030305" }} dpr={[1, 2]}>
+        <PerspectiveCamera makeDefault position={[0, 0, 7]} fov={45} />
+        <ambientLight intensity={0.2} color="#00E5FF" />
+        <directionalLight position={[5, 5, 5]} intensity={0.4} color="#7000FF" />
+        <directionalLight position={[-5, -2, 5]} intensity={0.2} color="#00E5FF" />
+        <pointLight position={[0, 0, 3]} intensity={0.3} color="#00FFA3" />
+        <BackgroundParticles />
+        <RingSystem />
+        <AuthScene />
+        <Sparkles count={60} scale={[8, 8, 8]} size={0.015} speed={0.2} color="#00E5FF" opacity={0.15} />
+        <Sparkles count={30} scale={[8, 8, 8]} size={0.01} speed={0.15} color="#7000FF" opacity={0.1} />
+      </Canvas>
+    </div>
+  );
+};
+
+const IconUser = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 0M8 21.75h8M12 18v3.75m0-16.5c-3.17 0-5.75 2.58-5.75 5.75S9.12 16.5 12 16.5s5.75-2.58 5.75-5.75-2.58-5.75-5.75-5.75Z" />
+  </svg>
+);
+
+const IconMail = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+  </svg>
+);
+
+const IconLock = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+  </svg>
+);
+
+const IconCheck = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const IconX = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const IconArrowLeft = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+  </svg>
+);
+
+const AnimatedCard = ({
+  children,
+  className = "",
+  delay = 0
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay, ease: [0.23, 1, 0.32, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  // Mode state: signin, signup, forgot, confirm_sent
   const initialMode = searchParams.get("mode") === "signup" ? "signup" : "signin";
   const [mode, setMode] = useState<"signin" | "signup" | "forgot" | "confirm_sent">(initialMode);
   
-  // Form fields
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"founder" | "investor">("founder");
 
-  // UX Feedback
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Sync mode parameter if it changes externally
   useEffect(() => {
     const queryMode = searchParams.get("mode");
     if (queryMode === "signup" || queryMode === "signin") {
       setMode(queryMode);
     }
     
-    // Check for callback redirect errors
     const errorParam = searchParams.get("error");
     if (errorParam === "verification_failed") {
       setErrorMsg("Email verification link could not be verified or has expired. Please try again.");
     }
   }, [searchParams]);
 
-  // Reset errors on mode toggle
   const handleModeChange = (newMode: "signin" | "signup" | "forgot") => {
     setMode(newMode);
     setErrorMsg("");
@@ -131,7 +293,6 @@ function AuthForm() {
         return;
       }
 
-      // Check if user is created successfully
       if (data?.user) {
         setMode("confirm_sent");
       }
@@ -171,17 +332,16 @@ function AuthForm() {
   };
 
   return (
-    <div className="max-w-md w-full bg-surface border border-border-hairline rounded-card p-6 shadow-2xs">
-      {/* Top Segmented Tab Switcher (Visible only if not in confirm/forgot mode) */}
+    <div className="max-w-md w-full bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-6 shadow-[0_8px_40px_rgba(0,0,0,0.4)] hover:border-[rgba(0,229,255,0.08)] transition-all duration-500">
       {(mode === "signin" || mode === "signup") && (
-        <div className="flex bg-background p-1 rounded-lg border border-border-hairline mb-6">
+        <div className="flex bg-[rgba(255,255,255,0.02)] p-1 rounded-lg border border-[rgba(255,255,255,0.03)] mb-6">
           <button
             type="button"
             onClick={() => handleModeChange("signin")}
-            className={`flex-1 text-center text-sm font-medium py-2 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 text-center text-sm font-medium py-2 rounded-md transition-all duration-300 cursor-pointer ${
               mode === "signin"
-                ? "bg-surface text-text-primary shadow-xs"
-                : "text-text-secondary hover:text-text-primary"
+                ? "bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white shadow-xs"
+                : "text-[rgba(255,255,255,0.3)] hover:text-white"
             }`}
           >
             Sign in
@@ -189,10 +349,10 @@ function AuthForm() {
           <button
             type="button"
             onClick={() => handleModeChange("signup")}
-            className={`flex-1 text-center text-sm font-medium py-2 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 text-center text-sm font-medium py-2 rounded-md transition-all duration-300 cursor-pointer ${
               mode === "signup"
-                ? "bg-surface text-text-primary shadow-xs"
-                : "text-text-secondary hover:text-text-primary"
+                ? "bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white shadow-xs"
+                : "text-[rgba(255,255,255,0.3)] hover:text-white"
             }`}
           >
             Sign up
@@ -200,15 +360,18 @@ function AuthForm() {
         </div>
       )}
 
-      {/* Header and Subtitles */}
       <div className="space-y-1.5 mb-6 text-left">
-        <h2 className="text-xl font-medium text-text-primary">
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.1)] rounded-full text-[11px] font-medium text-[#00E5FF] select-none tracking-tight mb-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+          {mode === "confirm_sent" ? "Confirm Email" : "Authentication"}
+        </div>
+        <h2 className="text-xl font-medium text-white">
           {mode === "signin" && "Welcome back"}
           {mode === "signup" && "Create account"}
           {mode === "forgot" && "Reset password"}
           {mode === "confirm_sent" && "Verify your email"}
         </h2>
-        <p className="text-sm text-text-secondary">
+        <p className="text-sm text-[rgba(255,255,255,0.4)]">
           {mode === "signin" && "Enter your credentials to access your dashboard."}
           {mode === "signup" && "Select your role and enter details to get started."}
           {mode === "forgot" && "Enter your email address to receive a password reset link."}
@@ -216,25 +379,33 @@ function AuthForm() {
         </p>
       </div>
 
-      {/* Message Banners */}
       {errorMsg && (
-        <div className="p-3 mb-4 rounded-lg bg-red-50 border border-red-150 text-danger text-sm font-medium">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 mb-4 rounded-lg bg-[rgba(255,68,68,0.05)] border border-[rgba(255,68,68,0.15)] text-[#FF4444] text-sm font-medium flex items-center gap-2"
+        >
+          <IconX className="w-4 h-4" />
           {errorMsg}
-        </div>
+        </motion.div>
       )}
       {successMsg && (
-        <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-150 text-success text-sm font-medium">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 mb-4 rounded-lg bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.15)] text-[#00FFA3] text-sm font-medium flex items-center gap-2"
+        >
+          <IconCheck className="w-4 h-4" />
           {successMsg}
-        </div>
+        </motion.div>
       )}
 
-      {/* Forms */}
       {mode === "confirm_sent" ? (
         <div className="space-y-4 text-center">
-          <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl text-left space-y-2">
-            <p className="text-sm text-text-primary font-medium">Next steps:</p>
-            <ol className="text-xs text-text-secondary list-decimal list-inside space-y-1.5 leading-relaxed">
-              <li>Open your email inbox for <strong className="text-text-primary font-medium">{email}</strong>.</li>
+          <div className="p-4 bg-[rgba(0,255,163,0.02)] border border-[rgba(0,255,163,0.05)] rounded-xl text-left space-y-2">
+            <p className="text-sm text-white font-medium">Next steps:</p>
+            <ol className="text-xs text-[rgba(255,255,255,0.4)] list-decimal list-inside space-y-1.5 leading-relaxed">
+              <li>Open your email inbox for <strong className="text-white font-medium">{email}</strong>.</li>
               <li>Click the confirmation link sent to you.</li>
               <li>You will be redirected automatically to your workspace.</li>
             </ol>
@@ -242,7 +413,7 @@ function AuthForm() {
           <button
             type="button"
             onClick={() => handleModeChange("signin")}
-            className="w-full text-center text-sm font-medium text-accent hover:underline mt-4 cursor-pointer"
+            className="w-full text-center text-sm font-medium text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors duration-300 mt-4 cursor-pointer"
           >
             Back to sign in
           </button>
@@ -258,18 +429,17 @@ function AuthForm() {
           }
           className="space-y-4 text-left"
         >
-          {/* Sign up role picker */}
           {mode === "signup" && (
             <div className="space-y-2">
-              <label className="text-xs font-medium text-text-secondary">I am a</label>
+              <label className="text-xs font-medium text-[rgba(255,255,255,0.4)]">I am a</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setRole("founder")}
-                  className={`py-2 px-3 border rounded-lg text-sm font-medium text-center transition-all cursor-pointer ${
+                  className={`py-2 px-3 border rounded-lg text-sm font-medium text-center transition-all duration-300 cursor-pointer ${
                     role === "founder"
-                      ? "border-accent bg-accent/5 text-accent"
-                      : "border-border-hairline text-text-secondary hover:text-text-primary bg-surface"
+                      ? "border-[#00E5FF] bg-[rgba(0,229,255,0.05)] text-[#00E5FF]"
+                      : "border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.3)] hover:text-white bg-[rgba(10,10,18,0.4)]"
                   }`}
                 >
                   Founder
@@ -277,10 +447,10 @@ function AuthForm() {
                 <button
                   type="button"
                   onClick={() => setRole("investor")}
-                  className={`py-2 px-3 border rounded-lg text-sm font-medium text-center transition-all cursor-pointer ${
+                  className={`py-2 px-3 border rounded-lg text-sm font-medium text-center transition-all duration-300 cursor-pointer ${
                     role === "investor"
-                      ? "border-accent bg-accent/5 text-accent"
-                      : "border-border-hairline text-text-secondary hover:text-text-primary bg-surface"
+                      ? "border-[#7000FF] bg-[rgba(112,0,255,0.05)] text-[#7000FF]"
+                      : "border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.3)] hover:text-white bg-[rgba(10,10,18,0.4)]"
                   }`}
                 >
                   Investor
@@ -289,77 +459,90 @@ function AuthForm() {
             </div>
           )}
 
-          {/* Full Name */}
           {mode === "signup" && (
             <div className="space-y-1.5 animate-in fade-in duration-100">
-              <label htmlFor="fullName" className="text-xs font-medium text-text-secondary">
+              <label htmlFor="fullName" className="text-xs font-medium text-[rgba(255,255,255,0.4)]">
                 Full name
               </label>
-              <input
-                id="fullName"
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Alex Rivera"
-                className="w-full h-[36px] px-3 border border-border-hairline rounded-button text-sm bg-surface text-text-primary placeholder-text-secondary focus:outline-hidden focus:border-accent focus:ring-1 focus:ring-accent transition-all"
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.15)]">
+                  <IconUser className="w-4 h-4" />
+                </div>
+                <input
+                  id="fullName"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Alex Rivera"
+                  className="w-full h-[36px] pl-9 pr-3 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
+                />
+              </div>
             </div>
           )}
 
-          {/* Email Address */}
           <div className="space-y-1.5">
-            <label htmlFor="email" className="text-xs font-medium text-text-secondary">
+            <label htmlFor="email" className="text-xs font-medium text-[rgba(255,255,255,0.4)]">
               Email address
             </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@company.com"
-              className="w-full h-[36px] px-3 border border-border-hairline rounded-button text-sm bg-surface text-text-primary placeholder-text-secondary focus:outline-hidden focus:border-accent focus:ring-1 focus:ring-accent transition-all"
-            />
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.15)]">
+                <IconMail className="w-4 h-4" />
+              </div>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com"
+                className="w-full h-[36px] pl-9 pr-3 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
+              />
+            </div>
           </div>
 
-          {/* Password (for signin and signup) */}
           {mode !== "forgot" && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-xs font-medium text-text-secondary">
+                <label htmlFor="password" className="text-xs font-medium text-[rgba(255,255,255,0.4)]">
                   Password
                 </label>
                 {mode === "signin" && (
                   <button
                     type="button"
                     onClick={() => handleModeChange("forgot")}
-                    className="text-xs font-medium text-accent hover:underline cursor-pointer"
+                    className="text-xs font-medium text-[#00E5FF] hover:text-[#00E5FF]/80 transition-colors duration-300 cursor-pointer"
                   >
                     Forgot password?
                   </button>
                 )}
               </div>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full h-[36px] px-3 border border-border-hairline rounded-button text-sm bg-surface text-text-primary placeholder-text-secondary focus:outline-hidden focus:border-accent focus:ring-1 focus:ring-accent transition-all"
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.15)]">
+                  <IconLock className="w-4 h-4" />
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-[36px] pl-9 pr-3 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
+                />
+              </div>
             </div>
           )}
 
-          {/* Action button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full h-[36px] mt-2 bg-accent text-surface text-sm font-medium rounded-button hover:bg-opacity-95 active:scale-98 transition-all flex items-center justify-center cursor-pointer focus:outline-hidden disabled:bg-opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-[36px] mt-2 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white text-sm font-medium rounded-button hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] active:scale-98 transition-all duration-300 flex items-center justify-center cursor-pointer focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
-              <span className="w-4 h-4 border-2 border-surface border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             ) : mode === "signin" ? (
               "Sign in"
             ) : mode === "signup" ? (
@@ -367,15 +550,15 @@ function AuthForm() {
             ) : (
               "Reset password"
             )}
-          </button>
+          </motion.button>
 
-          {/* Forgot mode back button */}
           {mode === "forgot" && (
             <button
               type="button"
               onClick={() => handleModeChange("signin")}
-              className="w-full text-center text-sm font-medium text-text-secondary hover:text-text-primary mt-4 cursor-pointer"
+              className="w-full text-center text-sm font-medium text-[rgba(255,255,255,0.3)] hover:text-white transition-colors duration-300 mt-4 cursor-pointer flex items-center justify-center gap-1"
             >
+              <IconArrowLeft className="w-4 h-4" />
               Back to sign in
             </button>
           )}
@@ -387,19 +570,22 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#030305] overflow-x-hidden">
+      <AuthBackground />
+      <div className="fixed inset-0 -z-5 bg-gradient-to-b from-[#030305]/40 via-transparent to-[#030305]/80 pointer-events-none" />
+
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center p-6 py-12">
+      <main className="relative z-10 flex-1 flex items-center justify-center p-6 py-12">
         <Suspense
           fallback={
-            <div className="max-w-md w-full bg-surface border border-border-hairline rounded-card p-6 shadow-2xs text-center">
-              <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <p className="text-sm text-text-secondary">Loading authentication...</p>
+            <div className="max-w-md w-full bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-6 shadow-[0_8px_40px_rgba(0,0,0,0.4)] text-center">
+              <div className="relative w-8 h-8 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-sm text-[rgba(255,255,255,0.3)]">Loading authentication...</p>
             </div>
           }
         >
-          <AuthForm />
+          <AuthForm />z
         </Suspense>
       </main>
 

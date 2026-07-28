@@ -1,12 +1,167 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/client";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { PerspectiveCamera, Float, Sparkles, Torus, MeshDistortMaterial } from "@react-three/drei";
+import * as THREE from "three";
+import { motion } from "framer-motion";
 
-// Step type definition
+const RegisterScene = () => {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const { mouse } = useThree();
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const x = (mouse.x - 0) * 0.15;
+      const y = (mouse.y - 0) * 0.1;
+      meshRef.current.rotation.x += (y - meshRef.current.rotation.x) * 0.02;
+      meshRef.current.rotation.y += (x - meshRef.current.rotation.y) * 0.02;
+      const time = state.clock.getElapsedTime();
+      meshRef.current.position.y = Math.sin(time * 0.3) * 0.08;
+    }
+  });
+
+  return (
+    <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.3}>
+      <mesh ref={meshRef} scale={1.6}>
+        <icosahedronGeometry args={[1, 1]} />
+        <MeshDistortMaterial
+          color="#00E5FF"
+          metalness={0.9}
+          roughness={0.05}
+          clearcoat={1}
+          clearcoatRoughness={0.05}
+          transparent
+          opacity={0.1}
+          distort={0.2}
+          speed={0.3}
+          emissive="#00E5FF"
+          emissiveIntensity={0.05}
+        />
+      </mesh>
+    </Float>
+  );
+};
+
+const BackgroundParticles = () => {
+  const particlesRef = useRef<THREE.Points>(null!);
+  const count = 100;
+  const positions = new Float32Array(count * 3);
+
+  useEffect(() => {
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+  }, []);
+
+  useFrame((state) => {
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y = state.clock.getElapsedTime() * 0.01;
+    }
+  });
+
+  return (
+    <points ref={particlesRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.015} transparent opacity={0.15} color="#00E5FF" sizeAttenuation />
+    </points>
+  );
+};
+
+const RingSystem = () => {
+  const ringRef = useRef<THREE.Mesh>(null!);
+
+  useFrame((state) => {
+    if (ringRef.current) {
+      ringRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.06) * 0.15;
+      ringRef.current.rotation.z = Math.cos(state.clock.getElapsedTime() * 0.05) * 0.1;
+    }
+  });
+
+  return (
+    <group ref={ringRef}>
+      <Torus args={[2.2, 0.015, 16, 100]} rotation={[Math.PI / 2, 0, 0]}>
+        <meshPhysicalMaterial color="#7000FF" emissive="#7000FF" emissiveIntensity={0.08} transparent opacity={0.1} metalness={0.8} roughness={0.2} />
+      </Torus>
+      <Torus args={[2.6, 0.01, 16, 100]} rotation={[Math.PI / 3, 0.15, 0]}>
+        <meshPhysicalMaterial color="#00FFA3" emissive="#00FFA3" emissiveIntensity={0.06} transparent opacity={0.06} metalness={0.8} roughness={0.2} />
+      </Torus>
+    </group>
+  );
+};
+
+const RegisterBackground = () => {
+  return (
+    <div className="fixed inset-0 -z-10 pointer-events-none">
+      <Canvas style={{ background: "#030305" }} dpr={[1, 2]}>
+        <PerspectiveCamera makeDefault position={[0, 0, 7]} fov={45} />
+        <ambientLight intensity={0.2} color="#00E5FF" />
+        <directionalLight position={[5, 5, 5]} intensity={0.4} color="#7000FF" />
+        <directionalLight position={[-5, -2, 5]} intensity={0.2} color="#00E5FF" />
+        <pointLight position={[0, 0, 3]} intensity={0.3} color="#00FFA3" />
+        <BackgroundParticles />
+        <RingSystem />
+        <RegisterScene />
+        <Sparkles count={60} scale={[8, 8, 8]} size={0.015} speed={0.2} color="#00E5FF" opacity={0.2} />
+        <Sparkles count={30} scale={[8, 8, 8]} size={0.01} speed={0.15} color="#7000FF" opacity={0.15} />
+      </Canvas>
+    </div>
+  );
+};
+
+const IconCheck = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const IconFile = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const IconUpload = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+  </svg>
+);
+
+const IconCheckSmall = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="2.5 6 4.5 8 9.5 3.5" />
+  </svg>
+);
+
+const AnimatedCard = ({
+  children,
+  className = "",
+  delay = 0
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay, ease: [0.23, 1, 0.32, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 interface FormStep {
   title: string;
   description: string;
@@ -64,7 +219,6 @@ export default function RegisterPage() {
     checkAuth();
   }, [router, supabase]);
 
-
   const renderFileInput = (
     label: string,
     file: File | null,
@@ -73,36 +227,32 @@ export default function RegisterPage() {
   ) => {
     return (
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-text-primary">
+        <label className="text-xs font-semibold text-white/80">
           {label}
         </label>
         
         {file ? (
-          <div className="flex items-center justify-between border border-border-hairline rounded-button bg-surface p-3 text-sm text-text-primary animate-in fade-in duration-100">
+          <div className="flex items-center justify-between border border-[rgba(255,255,255,0.05)] rounded-button bg-[rgba(255,255,255,0.02)] p-3 text-sm text-white animate-in fade-in duration-100">
             <div className="flex items-center gap-2 truncate">
-              <svg className="w-4 h-4 text-text-secondary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <IconFile className="w-4 h-4 text-[rgba(255,255,255,0.2)] flex-shrink-0" />
               <span className="truncate font-medium">{file.name}</span>
-              <span className="text-[10px] text-text-secondary">({(file.size / 1024).toFixed(1)} KB)</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.2)]">({(file.size / 1024).toFixed(1)} KB)</span>
             </div>
             <button
               type="button"
               onClick={() => setFile(null)}
-              className="text-xs text-text-secondary hover:text-accent font-medium cursor-pointer"
+              className="text-xs text-[rgba(255,255,255,0.2)] hover:text-[#00E5FF] font-medium cursor-pointer transition-colors"
             >
               Remove
             </button>
           </div>
         ) : (
-          <label className="flex flex-col items-center justify-center border border-dashed border-border-hairline hover:border-accent/40 rounded-button bg-surface p-6 text-center cursor-pointer group transition-colors duration-150">
-            <svg className="w-6 h-6 text-text-secondary group-hover:text-accent transition-colors duration-150 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <span className="text-xs text-text-primary font-medium">
+          <label className="flex flex-col items-center justify-center border border-dashed border-[rgba(255,255,255,0.05)] hover:border-[rgba(0,229,255,0.2)] rounded-button bg-[rgba(255,255,255,0.01)] p-6 text-center cursor-pointer group transition-all duration-300">
+            <IconUpload className="w-6 h-6 text-[rgba(255,255,255,0.15)] group-hover:text-[#00E5FF] transition-colors duration-300 mb-2" />
+            <span className="text-xs text-white/60 font-medium group-hover:text-white transition-colors duration-300">
               Click to select or drag file here
             </span>
-            <span className="text-[10px] text-text-secondary mt-1">
+            <span className="text-[10px] text-[rgba(255,255,255,0.15)] mt-1">
               Supports PDF, PNG, JPG, Word, Excel, PowerPoint
             </span>
             <input
@@ -122,8 +272,6 @@ export default function RegisterPage() {
     );
   };
 
-  // Form Field States
-  // Step 1: Basics
   const [startupName, setStartupName] = useState("");
   const [cin, setCin] = useState("");
   const [legalStatus, setLegalStatus] = useState("");
@@ -132,18 +280,15 @@ export default function RegisterPage() {
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
 
-  // Step 2: Founders
   const [founders, setFounders] = useState<FounderEntry[]>([{ name: "", linkedin: "" }]);
   const [teamSize, setTeamSize] = useState("");
 
-  // Step 3: Stage & traction
   const [stage, setStage] = useState("");
   const [revenueAmount, setRevenueAmount] = useState("");
   const [revenueCurrency, setRevenueCurrency] = useState("USD");
   const [activeUsers, setActiveUsers] = useState("");
   const [growthRate, setGrowthRate] = useState("");
 
-  // Step 4: Endorsements
   const [isIncubated, setIsIncubated] = useState<"yes" | "no" | "">("");
   const [incubatorNames, setIncubatorNames] = useState<string[]>([""]);
   const [isFunded, setIsFunded] = useState<"yes" | "no" | "">("");
@@ -152,31 +297,30 @@ export default function RegisterPage() {
   ]);
   const [isRaising, setIsRaising] = useState("");
 
-  // Step 5: Evidence
   const [coiFile, setCoiFile] = useState<File | null>(null);
   const [financialsFile, setFinancialsFile] = useState<File | null>(null);
   const [pitchDeckFile, setPitchDeckFile] = useState<File | null>(null);
   const [capTableFile, setCapTableFile] = useState<File | null>(null);
 
-  // Step 6: Consent
   const [consentPublic, setConsentPublic] = useState(false);
 
-  // Validation Error States
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background text-text-primary">
+      <div className="min-h-screen flex flex-col bg-[#030305] text-white">
         <Navbar />
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+          <div className="relative">
+            <div className="w-12 h-12 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
+            <div className="absolute inset-0 w-12 h-12 border-2 border-[#7000FF] border-b-transparent rounded-full animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+          </div>
         </main>
         <Footer />
       </div>
     );
   }
 
-  // Helper validation routines
   const validateUrl = (url: string) => {
     if (!url) return true;
     return url.startsWith("http://") || url.startsWith("https://") || url.includes(".");
@@ -259,7 +403,6 @@ export default function RegisterPage() {
         setCurrentStep((prev) => prev + 1);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        // Last step submit - save to Supabase database!
         setSubmitLoading(true);
         setDbError("");
 
@@ -327,7 +470,6 @@ export default function RegisterPage() {
     }
   };
 
-  // repeatable founders manipulation
   const addFounder = () => {
     setFounders([...founders, { name: "", linkedin: "" }]);
   };
@@ -344,7 +486,6 @@ export default function RegisterPage() {
     setFounders(updated);
   };
 
-  // repeatable incubators manipulation
   const addIncubator = () => {
     setIncubatorNames([...incubatorNames, ""]);
   };
@@ -361,7 +502,6 @@ export default function RegisterPage() {
     setIncubatorNames(updated);
   };
 
-  // repeatable funding entries manipulation
   const addFunding = () => {
     setFundingDetails([
       ...fundingDetails,
@@ -382,133 +522,143 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#030305] overflow-x-hidden">
+      <RegisterBackground />
+      <div className="fixed inset-0 -z-5 bg-gradient-to-b from-[#030305]/40 via-transparent to-[#030305]/80 pointer-events-none" />
+
       <Navbar />
 
-      <main className="flex-1 w-full max-w-[1100px] mx-auto px-4 md:px-6 py-12 flex flex-col gap-8">
-        {/* Title Section */}
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-medium tracking-tight text-text-primary">
+      <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto px-4 md:px-6 py-12 flex flex-col gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col gap-2"
+        >
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.1)] rounded-full text-[11px] font-medium text-[#00E5FF] select-none tracking-tight w-fit">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+            Founder Registration
+          </div>
+          <h1 className="text-3xl font-medium tracking-tight text-white">
             Founder Registration
           </h1>
-          <p className="text-sm text-text-secondary max-w-2xl leading-relaxed">
+          <p className="text-sm text-[rgba(255,255,255,0.4)] max-w-2xl leading-relaxed">
             Register your startup to build your TrustScore profile. Please fill out all required fields truthfully.
           </p>
-        </div>
+        </motion.div>
 
         {!isSubmitted && dbError && (
-          <div className="w-full p-4 rounded-lg bg-red-50 border border-red-150 text-danger text-sm font-medium">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full p-4 rounded-lg bg-[rgba(255,68,68,0.05)] border border-[rgba(255,68,68,0.15)] text-[#FF4444] text-sm font-medium"
+          >
             {dbError}
-          </div>
+          </motion.div>
         )}
 
         {isSubmitted ? (
-          /* Success Screen Card */
-          <div className="bg-surface border border-border-hairline rounded-card p-8 flex flex-col items-center justify-center text-center gap-6 animate-in fade-in zoom-in-95 duration-300 shadow-sm max-w-2xl mx-auto w-full mt-4">
-            <div className="w-12 h-12 bg-success/10 border border-success/20 rounded-full flex items-center justify-center text-success">
-              <svg className="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-medium text-text-primary">Registration submitted!</h2>
-              <p className="text-sm text-text-secondary mt-2 max-w-md mx-auto">
-                Thank you for registering. Our system is computing your baseline TrustScore from your verified credentials.
-              </p>
-            </div>
+          <AnimatedCard>
+            <div className="bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-8 flex flex-col items-center justify-center text-center gap-6 shadow-sm max-w-2xl mx-auto w-full mt-4 hover:border-[rgba(0,229,255,0.08)] transition-all duration-500">
+              <div className="w-14 h-14 bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.1)] rounded-full flex items-center justify-center text-[#00FFA3]">
+                <IconCheck className="w-7 h-7" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-medium text-white">Registration submitted!</h2>
+                <p className="text-sm text-[rgba(255,255,255,0.4)] mt-2 max-w-md mx-auto">
+                  Thank you for registering. Our system is computing your baseline TrustScore from your verified credentials.
+                </p>
+              </div>
 
-            {/* Review Box */}
-            <div className="w-full text-left bg-[#FAFAF8] border border-border-hairline rounded-card p-5 mt-4 space-y-4">
-              <h3 className="text-sm font-medium text-text-primary border-b border-border-hairline pb-2">
-                Startup Summary
-              </h3>
-              <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
-                <div>
-                  <p className="text-text-secondary">Company Name</p>
-                  <p className="font-medium text-text-primary mt-0.5">{startupName}</p>
-                </div>
-                <div>
-                  <p className="text-text-secondary">CIN</p>
-                  <p className="font-medium text-text-primary mt-0.5">{cin}</p>
-                </div>
-                <div>
-                  <p className="text-text-secondary">Legal Status</p>
-                  <p className="font-medium text-text-primary mt-0.5">{legalStatus}</p>
-                </div>
-                <div>
-                  <p className="text-text-secondary">Founded Date</p>
-                  <p className="font-medium text-text-primary mt-0.5">{foundedDate}</p>
-                </div>
-                <div>
-                  <p className="text-text-secondary">Sector</p>
-                  <p className="font-medium text-text-primary mt-0.5">{sector}</p>
-                </div>
-                <div>
-                  <p className="text-text-secondary">Stage</p>
-                  <p className="font-medium text-text-primary mt-0.5">{stage}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-text-secondary">Website</p>
-                  <p className="font-medium text-text-primary mt-0.5">{website || "None listed"}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-text-secondary">Score Public Consent</p>
-                  <p className="font-medium text-text-primary mt-0.5">
-                    {consentPublic ? "Yes, display computed TrustScore publicly" : "No, keep TrustScore locked"}
-                  </p>
-                </div>
-                <div className="col-span-2 border-t border-border-hairline pt-2 mt-1">
-                  <p className="text-text-secondary font-medium mb-1">Uploaded Evidence</p>
-                  <ul className="list-disc pl-4 space-y-1 text-text-primary">
-                    <li>Certificate of Incorporation: {coiFile ? coiFile.name : "Not provided"}</li>
-                    <li>Financials / Revenue Proof: {financialsFile ? financialsFile.name : "Not provided"}</li>
-                    <li>Pitch Deck: {pitchDeckFile ? pitchDeckFile.name : "Not provided"}</li>
-                    <li>Cap Table: {capTableFile ? capTableFile.name : "Not provided"}</li>
-                  </ul>
+              <div className="w-full text-left bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] rounded-card p-5 mt-4 space-y-4">
+                <h3 className="text-sm font-medium text-white border-b border-[rgba(255,255,255,0.03)] pb-2">
+                  Startup Summary
+                </h3>
+                <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                  <div>
+                    <p className="text-[rgba(255,255,255,0.3)]">Company Name</p>
+                    <p className="font-medium text-white mt-0.5">{startupName}</p>
+                  </div>
+                  <div>
+                    <p className="text-[rgba(255,255,255,0.3)]">CIN</p>
+                    <p className="font-medium text-white mt-0.5">{cin}</p>
+                  </div>
+                  <div>
+                    <p className="text-[rgba(255,255,255,0.3)]">Legal Status</p>
+                    <p className="font-medium text-white mt-0.5">{legalStatus}</p>
+                  </div>
+                  <div>
+                    <p className="text-[rgba(255,255,255,0.3)]">Founded Date</p>
+                    <p className="font-medium text-white mt-0.5">{foundedDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-[rgba(255,255,255,0.3)]">Sector</p>
+                    <p className="font-medium text-white mt-0.5">{sector}</p>
+                  </div>
+                  <div>
+                    <p className="text-[rgba(255,255,255,0.3)]">Stage</p>
+                    <p className="font-medium text-white mt-0.5">{stage}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-[rgba(255,255,255,0.3)]">Website</p>
+                    <p className="font-medium text-white mt-0.5">{website || "None listed"}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-[rgba(255,255,255,0.3)]">Score Public Consent</p>
+                    <p className="font-medium text-white mt-0.5">
+                      {consentPublic ? "Yes, display computed TrustScore publicly" : "No, keep TrustScore locked"}
+                    </p>
+                  </div>
+                  <div className="col-span-2 border-t border-[rgba(255,255,255,0.03)] pt-2 mt-1">
+                    <p className="text-[rgba(255,255,255,0.3)] font-medium mb-1">Uploaded Evidence</p>
+                    <ul className="list-disc pl-4 space-y-1 text-white/60">
+                      <li>Certificate of Incorporation: {coiFile ? coiFile.name : "Not provided"}</li>
+                      <li>Financials / Revenue Proof: {financialsFile ? financialsFile.name : "Not provided"}</li>
+                      <li>Pitch Deck: {pitchDeckFile ? pitchDeckFile.name : "Not provided"}</li>
+                      <li>Cap Table: {capTableFile ? capTableFile.name : "Not provided"}</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <button
-              onClick={() => {
-                // Reset form
-                setStartupName("");
-                setCin("");
-                setLegalStatus("");
-                setFoundedDate("");
-                setSector("");
-                setDescription("");
-                setWebsite("");
-                setFounders([{ name: "", linkedin: "" }]);
-                setTeamSize("");
-                setStage("");
-                setRevenueAmount("");
-                setRevenueCurrency("USD");
-                setActiveUsers("");
-                setGrowthRate("");
-                setIsIncubated("");
-                setIncubatorNames([""]);
-                setIsFunded("");
-                setFundingDetails([{ investorName: "", amount: "", currency: "USD", round: "Seed", date: "" }]);
-                setIsRaising("");
-                setCoiFile(null);
-                setFinancialsFile(null);
-                setPitchDeckFile(null);
-                setCapTableFile(null);
-                setConsentPublic(false);
-                setCurrentStep(0);
-                setIsSubmitted(false);
-              }}
-              className="h-9 px-5 bg-accent hover:bg-accent/90 text-surface rounded-button text-sm font-medium transition-colors cursor-pointer"
-            >
-              Register another startup
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  setStartupName("");
+                  setCin("");
+                  setLegalStatus("");
+                  setFoundedDate("");
+                  setSector("");
+                  setDescription("");
+                  setWebsite("");
+                  setFounders([{ name: "", linkedin: "" }]);
+                  setTeamSize("");
+                  setStage("");
+                  setRevenueAmount("");
+                  setRevenueCurrency("USD");
+                  setActiveUsers("");
+                  setGrowthRate("");
+                  setIsIncubated("");
+                  setIncubatorNames([""]);
+                  setIsFunded("");
+                  setFundingDetails([{ investorName: "", amount: "", currency: "USD", round: "Seed", date: "" }]);
+                  setIsRaising("");
+                  setCoiFile(null);
+                  setFinancialsFile(null);
+                  setPitchDeckFile(null);
+                  setCapTableFile(null);
+                  setConsentPublic(false);
+                  setCurrentStep(0);
+                  setIsSubmitted(false);
+                }}
+                className="h-9 px-5 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white rounded-button text-sm font-medium transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] cursor-pointer"
+              >
+                Register another startup
+              </button>
+            </div>
+          </AnimatedCard>
         ) : (
-          /* Multi-step Form Layout */
           <div className="flex flex-col md:flex-row gap-8 items-start">
-            {/* Left Sidebar Step Indicator */}
-            <div className="w-full md:w-64 flex-shrink-0 bg-surface border border-border-hairline rounded-card p-4">
+            <div className="w-full md:w-64 flex-shrink-0 bg-[rgba(10,10,18,0.4)] backdrop-blur-xl border border-[rgba(255,255,255,0.03)] rounded-card p-4 hover:border-[rgba(255,255,255,0.05)] transition-all duration-500">
               <div className="flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-none">
                 {STEPS.map((step, idx) => {
                   const isActive = idx === currentStep;
@@ -516,29 +666,22 @@ export default function RegisterPage() {
                   return (
                     <div
                       key={step.title}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-sm font-medium transition-colors select-none ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-button text-sm font-medium transition-all duration-300 select-none ${
                         isActive
-                          ? "bg-accent/5 text-accent border border-accent/15"
-                          : "text-text-secondary border border-transparent"
+                          ? "bg-[rgba(0,229,255,0.05)] text-[#00E5FF] border border-[rgba(0,229,255,0.1)]"
+                          : "text-[rgba(255,255,255,0.3)] border border-transparent hover:text-white hover:bg-[rgba(255,255,255,0.02)]"
                       }`}
                     >
-                      {/* Badge / Indicator */}
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 ${
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 transition-all duration-300 ${
                           isCompleted
-                            ? "bg-success text-surface"
+                            ? "bg-[#00FFA3] text-[#030305]"
                             : isActive
-                            ? "bg-accent text-surface"
-                            : "bg-[#FAFAF8] border border-border-hairline text-text-secondary"
+                            ? "bg-[#00E5FF] text-[#030305]"
+                            : "bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.2)]"
                         }`}
                       >
-                        {isCompleted ? (
-                          <svg className="w-3 h-3 stroke-current fill-none" viewBox="0 0 12 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="2.5 6 4.5 8 9.5 3.5" />
-                          </svg>
-                        ) : (
-                          idx + 1
-                        )}
+                        {isCompleted ? <IconCheckSmall className="w-3 h-3" /> : idx + 1}
                       </div>
                       <span className="whitespace-nowrap">{step.title}</span>
                     </div>
@@ -547,124 +690,114 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Main Form Content Card */}
-            <div className="flex-1 w-full bg-surface border border-border-hairline rounded-card p-6 flex flex-col justify-between min-h-[460px] shadow-xs">
+            <div className="flex-1 w-full bg-[rgba(10,10,18,0.4)] backdrop-blur-xl border border-[rgba(255,255,255,0.03)] rounded-card p-6 flex flex-col justify-between min-h-[460px] hover:border-[rgba(255,255,255,0.05)] transition-all duration-500">
               <div className="flex flex-col gap-6">
-                {/* Step Header */}
-                <div className="border-b border-border-hairline pb-4">
-                  <span className="text-[10px] text-text-secondary tracking-wider font-semibold uppercase">
+                <div className="border-b border-[rgba(255,255,255,0.03)] pb-4">
+                  <span className="text-[10px] text-[rgba(255,255,255,0.2)] tracking-wider font-semibold uppercase font-mono">
                     Step {currentStep + 1} of {STEPS.length}
                   </span>
-                  <h2 className="text-xl font-medium text-text-primary mt-1">
+                  <h2 className="text-xl font-medium text-white mt-1">
                     {STEPS[currentStep].title}
                   </h2>
-                  <p className="text-xs text-text-secondary mt-1">
+                  <p className="text-xs text-[rgba(255,255,255,0.3)] mt-1">
                     {STEPS[currentStep].description}
                   </p>
                 </div>
 
-                {/* Form Fields Render block */}
                 <div className="space-y-5">
                   {currentStep === 0 && (
-                    /* Step 1: Basics */
                     <>
-                      {/* Startup Name */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Registered startup name <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Registered startup name <span className="text-[#00E5FF]">*</span>
                         </label>
                         <input
                           type="text"
                           placeholder="e.g. Apex Biosensors Pvt Ltd"
                           value={startupName}
                           onChange={(e) => setStartupName(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary placeholder:text-text-secondary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
-                        {errors.startupName && <span className="text-xs text-accent mt-0.5">{errors.startupName}</span>}
+                        {errors.startupName && <span className="text-xs text-[#FF4444] mt-0.5">{errors.startupName}</span>}
                       </div>
 
-                      {/* CIN */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Corporate Identification Number (CIN) <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Corporate Identification Number (CIN) <span className="text-[#00E5FF]">*</span>
                         </label>
                         <input
                           type="text"
                           placeholder="e.g. U72900KA2021PTC145678"
                           value={cin}
                           onChange={(e) => setCin(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary placeholder:text-text-secondary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
-                        {errors.cin && <span className="text-xs text-accent mt-0.5">{errors.cin}</span>}
+                        {errors.cin && <span className="text-xs text-[#FF4444] mt-0.5">{errors.cin}</span>}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Legal Status */}
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-semibold text-text-primary">
-                            Legal status <span className="text-accent">*</span>
+                          <label className="text-xs font-semibold text-white/80">
+                            Legal status <span className="text-[#00E5FF]">*</span>
                           </label>
                           <select
                             value={legalStatus}
                             onChange={(e) => setLegalStatus(e.target.value)}
-                            className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                            className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                           >
-                            <option value="">Select status</option>
-                            <option value="proprietorship">Proprietorship</option>
-                            <option value="pvt ltd">Pvt Ltd</option>
-                            <option value="llp">LLP</option>
-                            <option value="other">Other</option>
+                            <option value="" className="bg-[#030305]">Select status</option>
+                            <option value="proprietorship" className="bg-[#030305]">Proprietorship</option>
+                            <option value="pvt ltd" className="bg-[#030305]">Pvt Ltd</option>
+                            <option value="llp" className="bg-[#030305]">LLP</option>
+                            <option value="other" className="bg-[#030305]">Other</option>
                           </select>
-                          {errors.legalStatus && <span className="text-xs text-accent mt-0.5">{errors.legalStatus}</span>}
+                          {errors.legalStatus && <span className="text-xs text-[#FF4444] mt-0.5">{errors.legalStatus}</span>}
                         </div>
 
-                        {/* Founded Date */}
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-semibold text-text-primary">
-                            Founded date <span className="text-accent">*</span>
+                          <label className="text-xs font-semibold text-white/80">
+                            Founded date <span className="text-[#00E5FF]">*</span>
                           </label>
                           <input
                             type="date"
                             value={foundedDate}
                             onChange={(e) => setFoundedDate(e.target.value)}
-                            className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                            className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                           />
-                          {errors.foundedDate && <span className="text-xs text-accent mt-0.5">{errors.foundedDate}</span>}
+                          {errors.foundedDate && <span className="text-xs text-[#FF4444] mt-0.5">{errors.foundedDate}</span>}
                         </div>
                       </div>
 
-                      {/* Sector */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Sector <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Sector <span className="text-[#00E5FF]">*</span>
                         </label>
                         <select
                           value={sector}
                           onChange={(e) => setSector(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         >
-                          <option value="">Select sector</option>
-                          <option value="Healthtech">Healthtech</option>
-                          <option value="Logistics">Logistics</option>
-                          <option value="Climate">Climate</option>
-                          <option value="Energy">Energy</option>
-                          <option value="Cybersecurity">Cybersecurity</option>
-                          <option value="Agtech">Agtech</option>
-                          <option value="Fintech">Fintech</option>
-                          <option value="Deeptech">Deeptech</option>
-                          <option value="AI">AI</option>
-                          <option value="Other">Other</option>
+                          <option value="" className="bg-[#030305]">Select sector</option>
+                          <option value="Healthtech" className="bg-[#030305]">Healthtech</option>
+                          <option value="Logistics" className="bg-[#030305]">Logistics</option>
+                          <option value="Climate" className="bg-[#030305]">Climate</option>
+                          <option value="Energy" className="bg-[#030305]">Energy</option>
+                          <option value="Cybersecurity" className="bg-[#030305]">Cybersecurity</option>
+                          <option value="Agtech" className="bg-[#030305]">Agtech</option>
+                          <option value="Fintech" className="bg-[#030305]">Fintech</option>
+                          <option value="Deeptech" className="bg-[#030305]">Deeptech</option>
+                          <option value="AI" className="bg-[#030305]">AI</option>
+                          <option value="Other" className="bg-[#030305]">Other</option>
                         </select>
-                        {errors.sector && <span className="text-xs text-accent mt-0.5">{errors.sector}</span>}
+                        {errors.sector && <span className="text-xs text-[#FF4444] mt-0.5">{errors.sector}</span>}
                       </div>
 
-                      {/* Description */}
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold text-text-primary">
-                            One-line description <span className="text-accent">*</span>
+                          <label className="text-xs font-semibold text-white/80">
+                            One-line description <span className="text-[#00E5FF]">*</span>
                           </label>
-                          <span className="text-[10px] text-text-secondary">
+                          <span className="text-[10px] text-[rgba(255,255,255,0.15)]">
                             {description.length}/300
                           </span>
                         </div>
@@ -674,14 +807,13 @@ export default function RegisterPage() {
                           placeholder="e.g. Non-invasive glucose tracking using infrared sensors."
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary placeholder:text-text-secondary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
-                        {errors.description && <span className="text-xs text-accent mt-0.5">{errors.description}</span>}
+                        {errors.description && <span className="text-xs text-[#FF4444] mt-0.5">{errors.description}</span>}
                       </div>
 
-                      {/* Website */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
+                        <label className="text-xs font-semibold text-white/80">
                           Website
                         </label>
                         <input
@@ -689,45 +821,42 @@ export default function RegisterPage() {
                           placeholder="e.g. https://apexbio.com"
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary placeholder:text-text-secondary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
-                        {errors.website && <span className="text-xs text-accent mt-0.5">{errors.website}</span>}
+                        {errors.website && <span className="text-xs text-[#FF4444] mt-0.5">{errors.website}</span>}
                       </div>
                     </>
                   )}
 
                   {currentStep === 1 && (
-                    /* Step 2: Founders */
                     <>
-                      {/* Repeatable Founders list */}
                       <div className="space-y-4">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Founder details <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Founder details <span className="text-[#00E5FF]">*</span>
                         </label>
 
                         {founders.map((founder, idx) => (
                           <div
                             key={idx}
-                            className="bg-[#FAFAF8] border border-border-hairline rounded-card p-4 space-y-3 relative animate-in fade-in duration-150"
+                            className="bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] rounded-card p-4 space-y-3 relative animate-in fade-in duration-150"
                           >
                             {founders.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removeFounder(idx)}
-                                className="absolute top-3 right-3 text-xs text-text-secondary hover:text-accent font-medium cursor-pointer"
+                                className="absolute top-3 right-3 text-xs text-[rgba(255,255,255,0.2)] hover:text-[#00E5FF] font-medium cursor-pointer transition-colors"
                               >
                                 Remove
                               </button>
                             )}
 
-                            <h4 className="text-xs font-semibold text-text-primary">
+                            <h4 className="text-xs font-semibold text-white/60">
                               Founder #{idx + 1}
                             </h4>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Founder Name */}
                               <div className="flex flex-col gap-1">
-                                <label className="text-[11px] font-semibold text-text-secondary">
+                                <label className="text-[11px] font-semibold text-[rgba(255,255,255,0.3)]">
                                   Full name
                                 </label>
                                 <input
@@ -735,16 +864,15 @@ export default function RegisterPage() {
                                   placeholder="e.g. Alex Rivera"
                                   value={founder.name}
                                   onChange={(e) => updateFounder(idx, "name", e.target.value)}
-                                  className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                                  className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                 />
                                 {errors[`founderName_${idx}`] && (
-                                  <span className="text-xs text-accent mt-0.5">{errors[`founderName_${idx}`]}</span>
+                                  <span className="text-xs text-[#FF4444] mt-0.5">{errors[`founderName_${idx}`]}</span>
                                 )}
                               </div>
 
-                              {/* LinkedIn */}
                               <div className="flex flex-col gap-1">
-                                <label className="text-[11px] font-semibold text-text-secondary">
+                                <label className="text-[11px] font-semibold text-[rgba(255,255,255,0.3)]">
                                   LinkedIn URL
                                 </label>
                                 <input
@@ -752,10 +880,10 @@ export default function RegisterPage() {
                                   placeholder="e.g. https://linkedin.com/in/alex-rivera"
                                   value={founder.linkedin}
                                   onChange={(e) => updateFounder(idx, "linkedin", e.target.value)}
-                                  className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                                  className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                 />
                                 {errors[`founderLinkedin_${idx}`] && (
-                                  <span className="text-xs text-accent mt-0.5">{errors[`founderLinkedin_${idx}`]}</span>
+                                  <span className="text-xs text-[#FF4444] mt-0.5">{errors[`founderLinkedin_${idx}`]}</span>
                                 )}
                               </div>
                             </div>
@@ -765,15 +893,14 @@ export default function RegisterPage() {
                         <button
                           type="button"
                           onClick={addFounder}
-                          className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 cursor-pointer py-1"
+                          className="text-xs font-semibold text-[#00E5FF] hover:text-[#00E5FF]/80 flex items-center gap-1 cursor-pointer py-1 transition-colors"
                         >
                           + Add another founder
                         </button>
                       </div>
 
-                      {/* Team Size */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
+                        <label className="text-xs font-semibold text-white/80">
                           Total team size
                         </label>
                         <input
@@ -782,48 +909,45 @@ export default function RegisterPage() {
                           placeholder="e.g. 5"
                           value={teamSize}
                           onChange={(e) => setTeamSize(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
                       </div>
                     </>
                   )}
 
                   {currentStep === 2 && (
-                    /* Step 3: Stage & traction */
                     <>
-                      {/* Stage selection */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Current startup stage <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Current startup stage <span className="text-[#00E5FF]">*</span>
                         </label>
                         <select
                           value={stage}
                           onChange={(e) => setStage(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         >
-                          <option value="">Select stage</option>
-                          <option value="idea">Idea</option>
-                          <option value="mvp">MVP</option>
-                          <option value="revenue">Revenue</option>
-                          <option value="scaling">Scaling</option>
+                          <option value="" className="bg-[#030305]">Select stage</option>
+                          <option value="idea" className="bg-[#030305]">Idea</option>
+                          <option value="mvp" className="bg-[#030305]">MVP</option>
+                          <option value="revenue" className="bg-[#030305]">Revenue</option>
+                          <option value="scaling" className="bg-[#030305]">Scaling</option>
                         </select>
-                        {errors.stage && <span className="text-xs text-accent mt-0.5">{errors.stage}</span>}
+                        {errors.stage && <span className="text-xs text-[#FF4444] mt-0.5">{errors.stage}</span>}
                       </div>
 
-                      {/* Revenue */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
+                        <label className="text-xs font-semibold text-white/80">
                           Revenue (MRR or ARR)
                         </label>
                         <div className="flex gap-2">
                           <select
                             value={revenueCurrency}
                             onChange={(e) => setRevenueCurrency(e.target.value)}
-                            className="h-9 w-24 border border-border-hairline rounded-button px-2 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent flex-shrink-0"
+                            className="h-9 w-24 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-2 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)] flex-shrink-0"
                           >
-                            <option value="USD">USD ($)</option>
-                            <option value="INR">INR (₹)</option>
-                            <option value="EUR">EUR (€)</option>
+                            <option value="USD" className="bg-[#030305]">USD ($)</option>
+                            <option value="INR" className="bg-[#030305]">INR (₹)</option>
+                            <option value="EUR" className="bg-[#030305]">EUR (€)</option>
                           </select>
                           <input
                             type="number"
@@ -831,14 +955,13 @@ export default function RegisterPage() {
                             placeholder="e.g. 50000"
                             value={revenueAmount}
                             onChange={(e) => setRevenueAmount(e.target.value)}
-                            className="h-9 flex-1 border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                            className="h-9 flex-1 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                           />
                         </div>
                       </div>
 
-                      {/* Active Users */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
+                        <label className="text-xs font-semibold text-white/80">
                           Active users / customers
                         </label>
                         <input
@@ -847,13 +970,12 @@ export default function RegisterPage() {
                           placeholder="e.g. 1200"
                           value={activeUsers}
                           onChange={(e) => setActiveUsers(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
                       </div>
 
-                      {/* Growth Rate */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-primary">
+                        <label className="text-xs font-semibold text-white/80">
                           Growth rate
                         </label>
                         <input
@@ -861,32 +983,30 @@ export default function RegisterPage() {
                           placeholder="e.g. 15% month-on-month"
                           value={growthRate}
                           onChange={(e) => setGrowthRate(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary placeholder:text-text-secondary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         />
                       </div>
                     </>
                   )}
 
                   {currentStep === 3 && (
-                    /* Step 4: Endorsements */
                     <>
-                      {/* Incubator Question */}
                       <div className="flex flex-col gap-2">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Part of any incubator or accelerator? <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Part of any incubator or accelerator? <span className="text-[#00E5FF]">*</span>
                         </label>
                         <div className="flex gap-4">
-                          <label className="inline-flex items-center gap-2 text-sm text-text-primary cursor-pointer select-none">
+                          <label className="inline-flex items-center gap-2 text-sm text-white cursor-pointer select-none">
                             <input
                               type="radio"
                               name="isIncubated"
                               checked={isIncubated === "yes"}
                               onChange={() => setIsIncubated("yes")}
-                              className="w-4 h-4 text-accent border-border-hairline focus:ring-accent focus:outline-hidden"
+                              className="w-4 h-4 text-[#00E5FF] border-[rgba(255,255,255,0.1)] bg-[rgba(10,10,18,0.4)] focus:ring-[#00E5FF] focus:outline-hidden"
                             />
                             <span>Yes</span>
                           </label>
-                          <label className="inline-flex items-center gap-2 text-sm text-text-primary cursor-pointer select-none">
+                          <label className="inline-flex items-center gap-2 text-sm text-white cursor-pointer select-none">
                             <input
                               type="radio"
                               name="isIncubated"
@@ -895,17 +1015,16 @@ export default function RegisterPage() {
                                 setIsIncubated("no");
                                 setIncubatorNames([""]);
                               }}
-                              className="w-4 h-4 text-accent border-border-hairline focus:ring-accent focus:outline-hidden"
+                              className="w-4 h-4 text-[#00E5FF] border-[rgba(255,255,255,0.1)] bg-[rgba(10,10,18,0.4)] focus:ring-[#00E5FF] focus:outline-hidden"
                             />
                             <span>No</span>
                           </label>
                         </div>
-                        {errors.isIncubated && <span className="text-xs text-accent mt-0.5">{errors.isIncubated}</span>}
+                        {errors.isIncubated && <span className="text-xs text-[#FF4444] mt-0.5">{errors.isIncubated}</span>}
 
-                        {/* Conditional Repeatable Incubators */}
                         {isIncubated === "yes" && (
-                          <div className="pl-4 border-l border-border-hairline mt-2 space-y-3 animate-in fade-in duration-150">
-                            <label className="text-[11px] font-semibold text-text-secondary">
+                          <div className="pl-4 border-l border-[rgba(255,255,255,0.05)] mt-2 space-y-3 animate-in fade-in duration-150">
+                            <label className="text-[11px] font-semibold text-[rgba(255,255,255,0.3)]">
                               Incubator/accelerator name(s)
                             </label>
                             {incubatorNames.map((name, idx) => (
@@ -916,17 +1035,17 @@ export default function RegisterPage() {
                                     placeholder="e.g. Y Combinator"
                                     value={name}
                                     onChange={(e) => updateIncubator(idx, e.target.value)}
-                                    className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                                    className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                   />
                                   {errors[`incubator_${idx}`] && (
-                                    <span className="text-xs text-accent mt-0.5">{errors[`incubator_${idx}`]}</span>
+                                    <span className="text-xs text-[#FF4444] mt-0.5">{errors[`incubator_${idx}`]}</span>
                                   )}
                                 </div>
                                 {incubatorNames.length > 1 && (
                                   <button
                                     type="button"
                                     onClick={() => removeIncubator(idx)}
-                                    className="text-xs text-text-secondary hover:text-accent font-medium cursor-pointer flex-shrink-0"
+                                    className="text-xs text-[rgba(255,255,255,0.2)] hover:text-[#00E5FF] font-medium cursor-pointer flex-shrink-0 transition-colors"
                                   >
                                     Remove
                                   </button>
@@ -936,7 +1055,7 @@ export default function RegisterPage() {
                             <button
                               type="button"
                               onClick={addIncubator}
-                              className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 cursor-pointer py-1"
+                              className="text-xs font-semibold text-[#00E5FF] hover:text-[#00E5FF]/80 flex items-center gap-1 cursor-pointer py-1 transition-colors"
                             >
                               + Add another incubator
                             </button>
@@ -944,23 +1063,22 @@ export default function RegisterPage() {
                         )}
                       </div>
 
-                      {/* Funded Question */}
                       <div className="flex flex-col gap-2 pt-2">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Are you externally funded? <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Are you externally funded? <span className="text-[#00E5FF]">*</span>
                         </label>
                         <div className="flex gap-4">
-                          <label className="inline-flex items-center gap-2 text-sm text-text-primary cursor-pointer select-none">
+                          <label className="inline-flex items-center gap-2 text-sm text-white cursor-pointer select-none">
                             <input
                               type="radio"
                               name="isFunded"
                               checked={isFunded === "yes"}
                               onChange={() => setIsFunded("yes")}
-                              className="w-4 h-4 text-accent border-border-hairline focus:ring-accent focus:outline-hidden"
+                              className="w-4 h-4 text-[#00E5FF] border-[rgba(255,255,255,0.1)] bg-[rgba(10,10,18,0.4)] focus:ring-[#00E5FF] focus:outline-hidden"
                             />
                             <span>Yes</span>
                           </label>
-                          <label className="inline-flex items-center gap-2 text-sm text-text-primary cursor-pointer select-none">
+                          <label className="inline-flex items-center gap-2 text-sm text-white cursor-pointer select-none">
                             <input
                               type="radio"
                               name="isFunded"
@@ -969,43 +1087,41 @@ export default function RegisterPage() {
                                 setIsFunded("no");
                                 setFundingDetails([{ investorName: "", amount: "", currency: "USD", round: "Seed", date: "" }]);
                               }}
-                              className="w-4 h-4 text-accent border-border-hairline focus:ring-accent focus:outline-hidden"
+                              className="w-4 h-4 text-[#00E5FF] border-[rgba(255,255,255,0.1)] bg-[rgba(10,10,18,0.4)] focus:ring-[#00E5FF] focus:outline-hidden"
                             />
                             <span>No</span>
                           </label>
                         </div>
-                        {errors.isFunded && <span className="text-xs text-accent mt-0.5">{errors.isFunded}</span>}
+                        {errors.isFunded && <span className="text-xs text-[#FF4444] mt-0.5">{errors.isFunded}</span>}
 
-                        {/* Conditional Repeatable Funding groups */}
                         {isFunded === "yes" && (
-                          <div className="pl-4 border-l border-border-hairline mt-2 space-y-4 animate-in fade-in duration-150">
-                            <label className="text-[11px] font-semibold text-text-secondary">
+                          <div className="pl-4 border-l border-[rgba(255,255,255,0.05)] mt-2 space-y-4 animate-in fade-in duration-150">
+                            <label className="text-[11px] font-semibold text-[rgba(255,255,255,0.3)]">
                               Investor details
                             </label>
 
                             {fundingDetails.map((funding, idx) => (
                               <div
                                 key={idx}
-                                className="bg-[#FAFAF8] border border-border-hairline rounded-card p-4 space-y-3 relative"
+                                className="bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] rounded-card p-4 space-y-3 relative"
                               >
                                 {fundingDetails.length > 1 && (
                                   <button
                                     type="button"
                                     onClick={() => removeFunding(idx)}
-                                    className="absolute top-3 right-3 text-xs text-text-secondary hover:text-accent font-medium cursor-pointer"
+                                    className="absolute top-3 right-3 text-xs text-[rgba(255,255,255,0.2)] hover:text-[#00E5FF] font-medium cursor-pointer transition-colors"
                                   >
                                     Remove
                                   </button>
                                 )}
 
-                                <h5 className="text-[11px] font-semibold text-text-primary">
+                                <h5 className="text-[11px] font-semibold text-white/60">
                                   Funding entry #{idx + 1}
                                 </h5>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {/* Investor Name */}
                                   <div className="flex flex-col gap-1">
-                                    <label className="text-[10px] font-semibold text-text-secondary">
+                                    <label className="text-[10px] font-semibold text-[rgba(255,255,255,0.3)]">
                                       Investor name
                                     </label>
                                     <input
@@ -1013,27 +1129,26 @@ export default function RegisterPage() {
                                       placeholder="e.g. Sequoia Capital"
                                       value={funding.investorName}
                                       onChange={(e) => updateFunding(idx, "investorName", e.target.value)}
-                                      className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                                      className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                     />
                                     {errors[`investorName_${idx}`] && (
-                                      <span className="text-xs text-accent mt-0.5">{errors[`investorName_${idx}`]}</span>
+                                      <span className="text-xs text-[#FF4444] mt-0.5">{errors[`investorName_${idx}`]}</span>
                                     )}
                                   </div>
 
-                                  {/* Amount + Currency */}
                                   <div className="flex flex-col gap-1">
-                                    <label className="text-[10px] font-semibold text-text-secondary">
+                                    <label className="text-[10px] font-semibold text-[rgba(255,255,255,0.3)]">
                                       Funding amount
                                     </label>
                                     <div className="flex gap-2">
                                       <select
                                         value={funding.currency}
                                         onChange={(e) => updateFunding(idx, "currency", e.target.value)}
-                                        className="h-9 w-20 border border-border-hairline rounded-button px-1 bg-surface text-xs text-text-primary focus:outline-hidden flex-shrink-0"
+                                        className="h-9 w-20 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-1 text-xs focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)] flex-shrink-0"
                                       >
-                                        <option value="USD">USD ($)</option>
-                                        <option value="INR">INR (₹)</option>
-                                        <option value="EUR">EUR (€)</option>
+                                        <option value="USD" className="bg-[#030305]">USD ($)</option>
+                                        <option value="INR" className="bg-[#030305]">INR (₹)</option>
+                                        <option value="EUR" className="bg-[#030305]">EUR (€)</option>
                                       </select>
                                       <input
                                         type="number"
@@ -1041,44 +1156,42 @@ export default function RegisterPage() {
                                         placeholder="e.g. 250000"
                                         value={funding.amount}
                                         onChange={(e) => updateFunding(idx, "amount", e.target.value)}
-                                        className="h-9 flex-1 border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden"
+                                        className="h-9 flex-1 border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm placeholder:text-[rgba(255,255,255,0.2)] focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                       />
                                     </div>
                                     {errors[`fundingAmount_${idx}`] && (
-                                      <span className="text-xs text-accent mt-0.5">{errors[`fundingAmount_${idx}`]}</span>
+                                      <span className="text-xs text-[#FF4444] mt-0.5">{errors[`fundingAmount_${idx}`]}</span>
                                     )}
                                   </div>
 
-                                  {/* Round */}
                                   <div className="flex flex-col gap-1">
-                                    <label className="text-[10px] font-semibold text-text-secondary">
+                                    <label className="text-[10px] font-semibold text-[rgba(255,255,255,0.3)]">
                                       Funding round
                                     </label>
                                     <select
                                       value={funding.round}
                                       onChange={(e) => updateFunding(idx, "round", e.target.value)}
-                                      className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden"
+                                      className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                     >
-                                      <option value="Pre-Seed">Pre-Seed</option>
-                                      <option value="Seed">Seed</option>
-                                      <option value="Series A">Series A</option>
-                                      <option value="Series B">Series B</option>
+                                      <option value="Pre-Seed" className="bg-[#030305]">Pre-Seed</option>
+                                      <option value="Seed" className="bg-[#030305]">Seed</option>
+                                      <option value="Series A" className="bg-[#030305]">Series A</option>
+                                      <option value="Series B" className="bg-[#030305]">Series B</option>
                                     </select>
                                   </div>
 
-                                  {/* Date */}
                                   <div className="flex flex-col gap-1">
-                                    <label className="text-[10px] font-semibold text-text-secondary">
+                                    <label className="text-[10px] font-semibold text-[rgba(255,255,255,0.3)]">
                                       Funding date
                                     </label>
                                     <input
                                       type="date"
                                       value={funding.date}
                                       onChange={(e) => updateFunding(idx, "date", e.target.value)}
-                                      className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden"
+                                      className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                                     />
                                     {errors[`fundingDate_${idx}`] && (
-                                      <span className="text-xs text-accent mt-0.5">{errors[`fundingDate_${idx}`]}</span>
+                                      <span className="text-xs text-[#FF4444] mt-0.5">{errors[`fundingDate_${idx}`]}</span>
                                     )}
                                   </div>
                                 </div>
@@ -1087,7 +1200,7 @@ export default function RegisterPage() {
                             <button
                               type="button"
                               onClick={addFunding}
-                              className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 cursor-pointer py-1"
+                              className="text-xs font-semibold text-[#00E5FF] hover:text-[#00E5FF]/80 flex items-center gap-1 cursor-pointer py-1 transition-colors"
                             >
                               + Add another funding entry
                             </button>
@@ -1095,31 +1208,29 @@ export default function RegisterPage() {
                         )}
                       </div>
 
-                      {/* Raising select option */}
                       <div className="flex flex-col gap-1.5 pt-2">
-                        <label className="text-xs font-semibold text-text-primary">
-                          Currently raising? <span className="text-accent">*</span>
+                        <label className="text-xs font-semibold text-white/80">
+                          Currently raising? <span className="text-[#00E5FF]">*</span>
                         </label>
                         <select
                           value={isRaising}
                           onChange={(e) => setIsRaising(e.target.value)}
-                          className="h-9 w-full border border-border-hairline rounded-button px-3 bg-surface text-sm text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent focus:border-accent"
+                          className="h-9 w-full border border-[rgba(255,255,255,0.05)] bg-[rgba(10,10,18,0.4)] text-white rounded-button px-3 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#00E5FF] focus:border-[#00E5FF] transition-all duration-300 hover:border-[rgba(255,255,255,0.1)]"
                         >
-                          <option value="">Select raising plans</option>
-                          <option value="yes">Yes</option>
-                          <option value="no">No</option>
-                          <option value="planning">Planning</option>
+                          <option value="" className="bg-[#030305]">Select raising plans</option>
+                          <option value="yes" className="bg-[#030305]">Yes</option>
+                          <option value="no" className="bg-[#030305]">No</option>
+                          <option value="planning" className="bg-[#030305]">Planning</option>
                         </select>
-                        {errors.isRaising && <span className="text-xs text-accent mt-0.5">{errors.isRaising}</span>}
+                        {errors.isRaising && <span className="text-xs text-[#FF4444] mt-0.5">{errors.isRaising}</span>}
                       </div>
                     </>
                   )}
 
                   {currentStep === 4 && (
-                    /* Step 5: Evidence */
                     <>
                       <div className="space-y-5">
-                        <p className="text-xs text-text-secondary leading-relaxed bg-[#FAFAF8] border border-border-hairline rounded-card p-3">
+                        <p className="text-xs text-[rgba(255,255,255,0.3)] leading-relaxed bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] rounded-card p-3">
                           Uploading evidence helps verify your claims and raises your Trustscore, but all uploads are optional. You can upload files now or complete this later.
                         </p>
 
@@ -1157,13 +1268,12 @@ export default function RegisterPage() {
                   )}
 
                   {currentStep === 5 && (
-                    /* Step 6: Consent */
                     <>
-                      <div className="bg-[#FAFAF8] border border-border-hairline rounded-card p-5 space-y-4">
-                        <h3 className="text-sm font-semibold text-text-primary">
+                      <div className="bg-[rgba(255,255,255,0.01)] border border-[rgba(255,255,255,0.03)] rounded-card p-5 space-y-4">
+                        <h3 className="text-sm font-semibold text-white">
                           Computed score display settings
                         </h3>
-                        <p className="text-xs text-text-secondary leading-relaxed">
+                        <p className="text-xs text-[rgba(255,255,255,0.3)] leading-relaxed">
                           Your startup TrustScore is computed programmatically based on verified registry records (CIN), document backups, and endorsement checks. You have full control over whether this baseline score is visible on the investor directory directory list.
                         </p>
 
@@ -1173,14 +1283,14 @@ export default function RegisterPage() {
                             id="consentPublic"
                             checked={consentPublic}
                             onChange={(e) => setConsentPublic(e.target.checked)}
-                            className="mt-1 w-4.5 h-4.5 text-accent border-border-hairline rounded-[4px] focus:ring-accent cursor-pointer"
+                            className="mt-1 w-4.5 h-4.5 text-[#00E5FF] border-[rgba(255,255,255,0.1)] bg-[rgba(10,10,18,0.4)] rounded-[4px] focus:ring-[#00E5FF] cursor-pointer transition-all duration-300"
                           />
                           <label
                             htmlFor="consentPublic"
-                            className="text-xs font-medium text-text-primary leading-normal cursor-pointer select-none"
+                            className="text-xs font-medium text-white/80 leading-normal cursor-pointer select-none"
                           >
                             Show my TrustScore publicly on my directory card. 
-                            <span className="block text-[11px] text-text-secondary font-normal mt-0.5">
+                            <span className="block text-[11px] text-[rgba(255,255,255,0.3)] font-normal mt-0.5">
                               If unselected, your startup appears in the directory under a locked state showing &quot;Score not shared&quot;.
                             </span>
                           </label>
@@ -1191,16 +1301,15 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Card Footer Control Buttons */}
-              <div className="flex justify-between items-center mt-8 pt-4 border-t border-border-hairline/60">
+              <div className="flex justify-between items-center mt-8 pt-4 border-t border-[rgba(255,255,255,0.03)]">
                 <button
                   type="button"
                   onClick={handleBack}
                   disabled={currentStep === 0}
-                  className={`h-9 px-4 rounded-button text-sm font-medium transition-colors select-none ${
+                  className={`h-9 px-4 rounded-button text-sm font-medium transition-all duration-300 select-none ${
                     currentStep === 0
-                      ? "text-text-secondary/40 border border-border-hairline/40 bg-transparent cursor-not-allowed"
-                      : "text-text-primary border border-border-hairline hover:bg-background cursor-pointer"
+                      ? "text-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.02)] bg-transparent cursor-not-allowed"
+                      : "text-white border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] cursor-pointer"
                   }`}
                 >
                   Back
@@ -1210,10 +1319,10 @@ export default function RegisterPage() {
                   type="button"
                   onClick={handleContinue}
                   disabled={submitLoading}
-                  className="h-9 px-5 bg-accent hover:bg-accent/90 text-surface rounded-button text-sm font-medium transition-colors cursor-pointer select-none flex items-center gap-2 disabled:bg-opacity-50 disabled:cursor-not-allowed"
+                  className="h-9 px-5 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white rounded-button text-sm font-medium transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] cursor-pointer select-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitLoading ? (
-                    <span className="w-3.5 h-3.5 border-2 border-surface border-t-transparent rounded-full animate-spin"></span>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   ) : null}
                   {currentStep === STEPS.length - 1 ? "Submit" : "Continue"}
                 </button>
