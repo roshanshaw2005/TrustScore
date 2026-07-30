@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -30,7 +31,7 @@ const TrustCore = () => {
       <mesh ref={meshRef} scale={2.2}>
         <icosahedronGeometry args={[1, 2]} />
         <meshPhysicalMaterial
-          color="#00E5FF"
+          color="#00FFA3"
           metalness={0.9}
           roughness={0.1}
           clearcoat={1}
@@ -38,7 +39,7 @@ const TrustCore = () => {
           transmission={0.85}
           thickness={0.5}
           envMapIntensity={1.5}
-          emissive="#00E5FF"
+          emissive="#00FFA3"
           emissiveIntensity={0.3}
           transparent
           opacity={0.92}
@@ -61,7 +62,7 @@ const ParticleSystem = () => {
       positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
       colors[i * 3] = 0;
       colors[i * 3 + 1] = 0.9 + Math.random() * 0.1;
-      colors[i * 3 + 2] = 1;
+      colors[i * 3 + 2] = 0.4 + Math.random() * 0.2;
     }
   }, []);
 
@@ -104,8 +105,8 @@ const RingSystem = () => {
     <group ref={ringRef}>
       <Torus args={[1.8, 0.02, 16, 100]} rotation={[Math.PI / 2, 0, 0]}>
         <meshPhysicalMaterial
-          color="#7000FF"
-          emissive="#7000FF"
+          color="#0A6B8B"
+          emissive="#0A6B8B"
           emissiveIntensity={0.3}
           transparent
           opacity={0.3}
@@ -161,21 +162,21 @@ const FloatingOrb = ({ position, color, delay }: { position: [number, number, nu
 const AboutScene = () => {
   return (
     <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
-      <Canvas style={{ background: "#030305" }} dpr={[1, 2]}>
+      <Canvas style={{ background: "#0B0F17" }} dpr={[1, 2]}>
         <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={45} />
-        <ambientLight intensity={0.3} color="#00E5FF" />
-        <directionalLight position={[5, 5, 5]} intensity={0.8} color="#7000FF" />
-        <directionalLight position={[-5, -2, 5]} intensity={0.5} color="#00E5FF" />
+        <ambientLight intensity={0.3} color="#00FFA3" />
+        <directionalLight position={[5, 5, 5]} intensity={0.8} color="#0A6B8B" />
+        <directionalLight position={[-5, -2, 5]} intensity={0.5} color="#00FFA3" />
         <pointLight position={[0, 0, 3]} intensity={1} color="#00FFA3" />
         <ParticleSystem />
         <RingSystem />
         <TrustCore />
-        <FloatingOrb position={[2.5, 1.5, -1]} color="#00E5FF" delay={0} />
-        <FloatingOrb position={[-2.3, -1.2, -1.5]} color="#7000FF" delay={1} />
+        <FloatingOrb position={[2.5, 1.5, -1]} color="#00FFA3" delay={0} />
+        <FloatingOrb position={[-2.3, -1.2, -1.5]} color="#0A6B8B" delay={1} />
         <FloatingOrb position={[1.8, -2, -2]} color="#00FFA3" delay={2} />
-        <FloatingOrb position={[-2.8, 1.8, -2.5]} color="#C8A451" delay={0.5} />
-        <Sparkles count={100} scale={[8, 8, 8]} size={0.02} speed={0.3} color="#00E5FF" opacity={0.4} />
-        <Sparkles count={50} scale={[8, 8, 8]} size={0.015} speed={0.2} color="#7000FF" opacity={0.3} />
+        <FloatingOrb position={[-2.8, 1.8, -2.5]} color="#A0AAB5" delay={0.5} />
+        <Sparkles count={100} scale={[8, 8, 8]} size={0.02} speed={0.3} color="#00FFA3" opacity={0.4} />
+        <Sparkles count={50} scale={[8, 8, 8]} size={0.015} speed={0.2} color="#0A6B8B" opacity={0.3} />
       </Canvas>
     </div>
   );
@@ -267,7 +268,7 @@ const AnimatedCard = ({
       className={className}
       whileHover={{ 
         y: -4,
-        boxShadow: "0 8px 40px rgba(0, 229, 255, 0.08), 0 0 80px rgba(0, 229, 255, 0.02)"
+        boxShadow: "0 8px 40px rgba(0, 255, 163, 0.08), 0 0 80px rgba(0, 255, 163, 0.02)"
       }}
     >
       {children}
@@ -281,9 +282,9 @@ export default function About() {
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#030305] overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-[#0B0F17] overflow-x-hidden">
       <AboutScene />
-      <div className="fixed inset-0 -z-5 bg-gradient-to-b from-[#030305]/40 via-transparent to-[#030305]/80 pointer-events-none" />
+      <div className="fixed inset-0 -z-5 bg-gradient-to-b from-[#0B0F17]/40 via-transparent to-[#0B0F17]/80 pointer-events-none" />
       <Navbar
         isLoggedIn={isLoggedIn}
         onAuthToggle={() => {
@@ -304,10 +305,10 @@ export default function About() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.1)] rounded-full w-fit"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.1)] rounded-full w-fit"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
-              <span className="text-[10px] font-mono tracking-wider text-[#00E5FF] uppercase">Trust Intelligence</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FFA3] animate-pulse" />
+              <span className="text-[10px] font-mono tracking-wider text-[#00FFA3] uppercase">Trust Intelligence</span>
             </motion.div>
             
             <motion.h1 
@@ -317,7 +318,7 @@ export default function About() {
               className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white leading-[1.1]"
             >
               Our Mission Is to Build the
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] via-[#7000FF] to-[#00FFA3]"> World's Most Trusted</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00FFA3] via-[#0A6B8B] to-[#00FFA3]"> World's Most Trusted</span>
               <br />
               Startup Directory.
             </motion.h1>
@@ -326,7 +327,7 @@ export default function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-base md:text-lg text-[rgba(255,255,255,0.6)] leading-relaxed max-w-xl"
+              className="text-base md:text-lg text-[#E2E8F0] leading-relaxed max-w-xl"
             >
               We believe transparency accelerates innovation and reduces friction for both founders and investors.
             </motion.p>
@@ -339,14 +340,14 @@ export default function About() {
             >
               <Link
                 href="/register"
-                className="px-8 py-3.5 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white text-sm font-medium rounded-button hover:shadow-[0_0_40px_rgba(0,229,255,0.3)] active:scale-98 transition-all duration-300 inline-flex items-center gap-2"
+                className="px-8 py-3.5 bg-gradient-to-r from-[#00FFA3] to-[#0A6B8B] text-[#0B0F17] text-sm font-medium rounded-2xl hover:shadow-[0_0_40px_rgba(0,255,163,0.3)] active:scale-98 transition-all duration-300 inline-flex items-center gap-2"
               >
                 Get Started
                 <IconArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/demo"
-                className="px-8 py-3.5 border border-[rgba(255,255,255,0.08)] text-white/80 text-sm font-medium rounded-button hover:border-[rgba(0,229,255,0.3)] hover:text-white transition-all duration-300"
+                className="px-8 py-3.5 border border-[#0A6B8B] bg-[rgba(255,255,255,0.02)] backdrop-blur-sm text-white text-sm font-medium rounded-2xl hover:border-[#00FFA3] hover:text-white transition-all duration-300"
               >
                 View Demo
               </Link>
@@ -360,18 +361,24 @@ export default function About() {
             className="w-full flex justify-center"
           >
             <div className="relative w-full max-w-[500px] aspect-square">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/5 via-[#7000FF]/5 to-[#00FFA3]/5 rounded-2xl border border-[rgba(255,255,255,0.05)] blur-2xl" />
-              <div className="relative w-full h-full bg-[rgba(10,10,18,0.4)] backdrop-blur-sm rounded-2xl border border-[rgba(255,255,255,0.05)] p-8 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-transparent to-[#7000FF]/10" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#00FFA3]/5 via-[#0A6B8B]/5 to-[#00FFA3]/5 rounded-2xl border border-[rgba(255,255,255,0.05)] blur-2xl" />
+              <div className="relative w-full h-full bg-[rgba(16,20,28,0.4)] backdrop-blur-sm rounded-2xl border border-[rgba(255,255,255,0.05)] p-8 flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00FFA3]/10 via-transparent to-[#0A6B8B]/10" />
                 <div className="relative z-10 flex flex-col items-center gap-6">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#00E5FF] to-[#7000FF] p-0.5">
-                    <div className="w-full h-full rounded-full bg-[#030305] flex items-center justify-center">
-                      <span className="text-3xl font-bold text-white">AI</span>
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#00FFA3] to-[#0A6B8B] p-0.5">
+                    <div className="w-full h-full rounded-full bg-[#0B0F17] flex items-center justify-center">
+                      <Image
+                        src="/logo.png"
+                        alt="TrustScore AI Logo"
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 object-contain"
+                      />
                     </div>
                   </div>
                   <div className="text-center">
                     <p className="text-[rgba(255,255,255,0.4)] font-mono text-xs tracking-wider uppercase">TrustScore Engine</p>
-                    <p className="text-2xl font-bold text-white">98.4%</p>
+                    <p className="text-2xl font-bold text-[#00FFA3]">98.4%</p>
                     <p className="text-[rgba(255,255,255,0.4)] text-sm">Extraction Accuracy</p>
                   </div>
                   <div className="flex gap-4">
@@ -381,7 +388,7 @@ export default function About() {
                     </div>
                     <div className="w-px bg-[rgba(255,255,255,0.05)]" />
                     <div className="text-center">
-                      <p className="text-[#00E5FF] text-xl font-bold">50+</p>
+                      <p className="text-[#00FFA3] text-xl font-bold">50+</p>
                       <p className="text-[rgba(255,255,255,0.3)] text-xs font-mono">Startups Verified</p>
                     </div>
                   </div>
@@ -396,15 +403,15 @@ export default function About() {
             <h2 className="text-2xl font-medium text-white tracking-tight">
               Bridging the Trust Gap.
             </h2>
-            <div className="w-12 h-1 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] rounded-full mt-1" />
+            <div className="w-12 h-1 bg-gradient-to-r from-[#00FFA3] to-[#0A6B8B] rounded-full mt-1" />
             <p className="text-sm text-[rgba(255,255,255,0.3)] font-mono mt-2">01 — Core Thesis</p>
           </div>
           
           <div className="md:col-span-2 flex flex-col gap-6">
-            <p className="text-sm md:text-base text-[rgba(255,255,255,0.6)] leading-relaxed">
+            <p className="text-sm md:text-base text-[#E2E8F0] leading-relaxed">
               Startup validation is often opaque and manual. Founders spend countless hours repeating the same due diligence processes, while investors navigate fragmented data that is difficult to verify at scale.
             </p>
-            <p className="text-sm md:text-base text-[rgba(255,255,255,0.6)] leading-relaxed">
+            <p className="text-sm md:text-base text-[#E2E8F0] leading-relaxed">
               TrustScore AI was built to provide a standardized, evidence-backed layer of credibility to the ecosystem. By centralizing verification, we empower stakeholders to focus on building rather than auditing.
             </p>
           </div>
@@ -414,50 +421,50 @@ export default function About() {
           <h2 className="text-2xl md:text-3xl font-medium text-white text-center tracking-tight mb-4">
             Scaling Credibility.
           </h2>
-          <p className="text-sm md:text-base text-[rgba(255,255,255,0.6)] text-center leading-relaxed max-w-2xl mb-12">
+          <p className="text-sm md:text-base text-[#8892A4] text-center leading-relaxed max-w-2xl mb-12">
             We combine automated data extraction with human-in-the-loop verification to create a verifiable score.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
             <AnimatedCard delay={0.1}>
-              <div className="bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-6 flex flex-col gap-4 hover:border-[rgba(0,229,255,0.2)] transition-all duration-500 group">
-                <div className="w-12 h-12 rounded-full bg-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.1)] flex items-center justify-center text-[#00E5FF] group-hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-500">
+              <div className="bg-[rgba(16,20,28,0.4)] backdrop-blur-xl border border-[rgba(255,255,255,0.03)] rounded-2xl p-6 flex flex-col gap-4 hover:border-[rgba(0,255,163,0.2)] transition-all duration-500 group">
+                <div className="w-12 h-12 rounded-full bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.1)] flex items-center justify-center text-[#00FFA3] group-hover:shadow-[0_0_30px_rgba(0,255,163,0.1)] transition-all duration-500">
                   <IconDatabase className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-medium text-white">Automated Validation</h3>
-                <p className="text-xs md:text-sm text-[rgba(255,255,255,0.6)] leading-relaxed">
+                <p className="text-xs md:text-sm text-[#8892A4] leading-relaxed group-hover:text-[#E2E8F0] transition-colors duration-300">
                   We pull data directly from connected SaaS tools to ensure accuracy and real-time validity.
                 </p>
-                <div className="mt-2 flex items-center gap-2 text-xs font-mono text-[rgba(255,255,255,0.2)] group-hover:text-[rgba(0,229,255,0.4)] transition-colors duration-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse" />
+                <div className="mt-2 flex items-center gap-2 text-xs font-mono text-[rgba(255,255,255,0.2)] group-hover:text-[rgba(0,255,163,0.4)] transition-colors duration-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00FFA3] animate-pulse" />
                   <span>AI-Powered</span>
                 </div>
               </div>
             </AnimatedCard>
 
             <AnimatedCard delay={0.2}>
-              <div className="bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-6 flex flex-col gap-4 hover:border-[rgba(112,0,255,0.2)] transition-all duration-500 group">
-                <div className="w-12 h-12 rounded-full bg-[rgba(112,0,255,0.05)] border border-[rgba(112,0,255,0.1)] flex items-center justify-center text-[#7000FF] group-hover:shadow-[0_0_30px_rgba(112,0,255,0.1)] transition-all duration-500">
+              <div className="bg-[rgba(16,20,28,0.4)] backdrop-blur-xl border border-[rgba(255,255,255,0.03)] rounded-2xl p-6 flex flex-col gap-4 hover:border-[rgba(0,255,163,0.2)] transition-all duration-500 group">
+                <div className="w-12 h-12 rounded-full bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.1)] flex items-center justify-center text-[#00FFA3] group-hover:shadow-[0_0_30px_rgba(0,255,163,0.1)] transition-all duration-500">
                   <IconShield className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-medium text-white">Human Review</h3>
-                <p className="text-xs md:text-sm text-[rgba(255,255,255,0.6)] leading-relaxed">
+                <p className="text-xs md:text-sm text-[#8892A4] leading-relaxed group-hover:text-[#E2E8F0] transition-colors duration-300">
                   Expert analysts verify sensitive claims that machines can't catch, adding a layer of nuanced judgment.
                 </p>
-                <div className="mt-2 flex items-center gap-2 text-xs font-mono text-[rgba(255,255,255,0.2)] group-hover:text-[rgba(112,0,255,0.4)] transition-colors duration-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#7000FF] animate-pulse" />
+                <div className="mt-2 flex items-center gap-2 text-xs font-mono text-[rgba(255,255,255,0.2)] group-hover:text-[rgba(0,255,163,0.4)] transition-colors duration-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00FFA3] animate-pulse" />
                   <span>Human Verified</span>
                 </div>
               </div>
             </AnimatedCard>
 
             <AnimatedCard delay={0.3}>
-              <div className="bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-6 flex flex-col gap-4 hover:border-[rgba(0,255,163,0.2)] transition-all duration-500 group">
+              <div className="bg-[rgba(16,20,28,0.4)] backdrop-blur-xl border border-[rgba(255,255,255,0.03)] rounded-2xl p-6 flex flex-col gap-4 hover:border-[rgba(0,255,163,0.2)] transition-all duration-500 group">
                 <div className="w-12 h-12 rounded-full bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.1)] flex items-center justify-center text-[#00FFA3] group-hover:shadow-[0_0_30px_rgba(0,255,163,0.1)] transition-all duration-500">
                   <IconTrending className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-medium text-white">Dynamic Score</h3>
-                <p className="text-xs md:text-sm text-[rgba(255,255,255,0.6)] leading-relaxed">
+                <p className="text-xs md:text-sm text-[#8892A4] leading-relaxed group-hover:text-[#E2E8F0] transition-colors duration-300">
                   Profiles stay updated in real-time as a startup grows and scales, reflecting their current health.
                 </p>
                 <div className="mt-2 flex items-center gap-2 text-xs font-mono text-[rgba(255,255,255,0.2)] group-hover:text-[rgba(0,255,163,0.4)] transition-colors duration-300">
@@ -471,7 +478,7 @@ export default function About() {
 
         <AnimatedSection delay={0.3} className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           <motion.div 
-            className="bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-8 flex flex-col gap-6 hover:border-[rgba(0,229,255,0.15)] transition-all duration-500 group"
+            className="bg-[rgba(16,20,28,0.4)] backdrop-blur-xl border border-[rgba(255,255,255,0.03)] rounded-2xl p-8 flex flex-col gap-6 hover:border-[rgba(0,255,163,0.15)] transition-all duration-500 group"
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
@@ -490,7 +497,7 @@ export default function About() {
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="flex items-start gap-3 text-sm text-[rgba(255,255,255,0.6)] leading-relaxed"
+                  className="flex items-start gap-3 text-sm text-[#8892A4] leading-relaxed group-hover:text-[#E2E8F0] transition-colors duration-300"
                 >
                   <div className="w-5 h-5 rounded-full bg-[rgba(0,255,163,0.05)] border border-[rgba(0,255,163,0.1)] flex items-center justify-center text-[#00FFA3] flex-shrink-0 mt-0.5 group-hover:border-[rgba(0,255,163,0.3)] transition-all duration-300">
                     <IconCheck className="w-3 h-3" />
@@ -502,7 +509,7 @@ export default function About() {
           </motion.div>
 
           <motion.div 
-            className="bg-gradient-to-br from-[rgba(0,229,255,0.05)] via-[rgba(112,0,255,0.02)] to-[rgba(0,255,163,0.02)] border border-[rgba(255,255,255,0.05)] rounded-card p-8 flex flex-col justify-between hover:border-[rgba(0,229,255,0.2)] transition-all duration-500 group gap-8"
+            className="bg-gradient-to-br from-[rgba(0,255,163,0.05)] via-[rgba(0,255,163,0.02)] to-[rgba(0,255,163,0.02)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-8 flex flex-col justify-between hover:border-[rgba(0,255,163,0.2)] transition-all duration-500 group gap-8"
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
@@ -510,17 +517,17 @@ export default function About() {
           >
             <div className="flex flex-col gap-4">
               <h3 className="text-xl font-medium text-white">The Future of Venture.</h3>
-              <p className="text-sm text-[rgba(255,255,255,0.6)] leading-relaxed">
+              <p className="text-sm text-[#8892A4] leading-relaxed group-hover:text-[#E2E8F0] transition-colors duration-300">
                 We're building a future where founders spend less time in due diligence and more time building, and where investors can deploy capital with instant, data-backed confidence.
               </p>
             </div>
             <div className="w-full flex justify-center">
               <div className="relative w-48 h-48">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-[#7000FF]/10 to-[#00FFA3]/10 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
-                <div className="relative w-full h-full bg-[rgba(10,10,18,0.4)] backdrop-blur-sm rounded-full border border-[rgba(255,255,255,0.05)] flex items-center justify-center group-hover:border-[rgba(0,229,255,0.2)] transition-all duration-500">
-                  <IconGlobe className="w-32 h-32 text-[rgba(255,255,255,0.1)] group-hover:text-[rgba(0,229,255,0.3)] transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00FFA3]/10 via-[#0A6B8B]/10 to-[#00FFA3]/10 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500" />
+                <div className="relative w-full h-full bg-[rgba(16,20,28,0.4)] backdrop-blur-sm rounded-full border border-[rgba(255,255,255,0.05)] flex items-center justify-center group-hover:border-[rgba(0,255,163,0.2)] transition-all duration-500">
+                  <IconGlobe className="w-32 h-32 text-[rgba(255,255,255,0.1)] group-hover:text-[rgba(0,255,163,0.3)] transition-all duration-500" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00E5FF] to-[#7000FF] opacity-10 group-hover:opacity-20 transition-all duration-500" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00FFA3] to-[#0A6B8B] opacity-10 group-hover:opacity-20 transition-all duration-500" />
                   </div>
                 </div>
               </div>
@@ -529,10 +536,10 @@ export default function About() {
         </AnimatedSection>
 
         <AnimatedSection delay={0.4} className="w-full mb-20">
-          <div className="relative bg-[rgba(10,10,18,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-card p-8 md:p-12 text-center flex flex-col items-center gap-6 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/5 via-[#7000FF]/2 to-[#00FFA3]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#00E5FF]/5 rounded-full blur-3xl group-hover:bg-[#00E5FF]/10 transition-all duration-700" />
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#7000FF]/5 rounded-full blur-3xl group-hover:bg-[#7000FF]/10 transition-all duration-700" />
+          <div className="relative bg-[rgba(16,20,28,0.6)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-2xl p-8 md:p-12 text-center flex flex-col items-center gap-6 overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00FFA3]/5 via-[#0A6B8B]/2 to-[#00FFA3]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#00FFA3]/5 rounded-full blur-3xl group-hover:bg-[#00FFA3]/10 transition-all duration-700" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#0A6B8B]/5 rounded-full blur-3xl group-hover:bg-[#0A6B8B]/10 transition-all duration-700" />
             
             <div className="relative z-10 flex flex-col items-center gap-6">
               <motion.div
@@ -540,22 +547,28 @@ export default function About() {
                 whileInView={{ scale: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
                 viewport={{ once: true }}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00E5FF] to-[#7000FF] p-0.5"
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00FFA3] to-[#0A6B8B] p-0.5"
               >
-                <div className="w-full h-full rounded-full bg-[#030305] flex items-center justify-center">
-                  <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#7000FF]">AI</span>
+                <div className="w-full h-full rounded-full bg-[#0B0F17] flex items-center justify-center">
+                  <Image
+                    src="/logo.png"
+                    alt="TrustScore AI Logo"
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 object-contain"
+                  />
                 </div>
               </motion.div>
               
               <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white">
                 Join the Network.
               </h2>
-              <p className="text-sm md:text-base text-[rgba(255,255,255,0.6)] max-w-lg leading-relaxed">
+              <p className="text-sm md:text-base text-[#8892A4] max-w-lg leading-relaxed">
                 Start building your credibility profile today.
               </p>
               <Link
                 href="/register"
-                className="px-10 py-4 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white text-sm font-medium rounded-button hover:shadow-[0_0_60px_rgba(0,229,255,0.3)] active:scale-98 transition-all duration-300 inline-flex items-center gap-2 group-hover:shadow-[0_0_40px_rgba(0,229,255,0.15)]"
+                className="px-10 py-4 bg-gradient-to-r from-[#00FFA3] to-[#0A6B8B] text-[#0B0F17] text-sm font-medium rounded-2xl hover:shadow-[0_0_60px_rgba(0,255,163,0.3)] active:scale-98 transition-all duration-300 inline-flex items-center gap-2 group-hover:shadow-[0_0_40px_rgba(0,255,163,0.15)]"
               >
                 Get Started
                 <IconArrowRight className="w-4 h-4" />

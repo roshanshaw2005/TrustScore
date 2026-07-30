@@ -69,7 +69,13 @@ const BackgroundParticles = () => {
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        <bufferAttribute 
+   attach="attributes-position" 
+   count={count} 
+   array={positions} 
+   itemSize={3} 
+   args={[positions, 3]}  
+/>
       </bufferGeometry>
       <pointsMaterial size={0.015} transparent opacity={0.15} color="#00E5FF" sizeAttenuation />
     </points>

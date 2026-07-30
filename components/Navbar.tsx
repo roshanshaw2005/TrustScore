@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/components/AuthProvider";
 
 interface NavItem {
   label: string;
@@ -45,11 +46,13 @@ export default function Navbar({
   profileOpenOverride,
   onProductsOpenChange,
   onProfileOpenChange,
+  onAuthToggle,
 }: NavbarProps) {
   const router = useRouter();
   const supabase = createClient();
+  
+  const { user, signOut, signInWithGoogle } = useAuth();
 
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCompanies, setHasCompanies] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -79,20 +82,8 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+    setLoading(false);
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -119,7 +110,7 @@ export default function Navbar({
       }
     }
 
-    const userRole = user.user_metadata?.role || user.user_metadata?.user_type || "";
+    const userRole = user?.user_metadata?.role || user?.user_metadata?.user_type || "";
     if (userRole === "founder") {
       checkCompanies();
     } else {
@@ -146,11 +137,20 @@ export default function Navbar({
   }, [setProductsOpen, setProfileOpen]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     setProfileOpen(false);
     setMobileMenuOpen(false);
     router.push("/");
     router.refresh();
+  };
+
+  const handleAuthClick = () => {
+    if (user) {
+      handleSignOut();
+    } else {
+      signInWithGoogle();
+    }
+    if (onAuthToggle) onAuthToggle();
   };
 
   const isLoggedIn = user !== null;
@@ -197,7 +197,7 @@ export default function Navbar({
               <div className="absolute inset-0 bg-[#00E5FF] blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-300 rounded-full" />
               <LogoIcon className="w-6 h-6 text-[#00E5FF] relative z-10 transition-transform duration-300 group-hover:scale-105" />
             </div>
-            <span className="font-medium text-white text-lg tracking-tight bg-gradient-to-r from-white to-[rgba(255,255,255,0.6)] bg-clip-text text-transparent hover:from-[#00E5FF] hover:to-[#7000FF] transition-all duration-300">
+            <span className="font-medium text-white text-lg tracking-tight bg-gradient-to-r from-white to-[rgba(255,255,255,0.6)] bg-clip-text text-transparent hover:from-[#00E5FF] hover:to-[#00FFA3] transition-all duration-300">
               TrustScore AI
             </span>
           </Link>
@@ -210,7 +210,7 @@ export default function Navbar({
                   href={item.href}
                   className="relative px-3 py-1.5 text-sm font-medium text-[rgba(255,255,255,0.4)] hover:text-white transition-colors duration-300 group">
                   {item.label}
-                  <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-[#00E5FF] to-[#7000FF] transition-all duration-300 group-hover:w-full group-hover:left-0" />
+                  <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-[#00E5FF] to-[#00FFA3] transition-all duration-300 group-hover:w-full group-hover:left-0" />
                 </Link>
               );
             })}
@@ -222,13 +222,13 @@ export default function Navbar({
             <div className="h-9 w-24 bg-[rgba(255,255,255,0.02)] animate-pulse rounded-button border border-[rgba(255,255,255,0.03)]" />
           ) : !isLoggedIn ? (
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                href="/auth?mode=signup"
-                className="relative overflow-hidden bg-gradient-to-r from-[#00E5FF] to-[#7000FF] text-white px-5 py-2 text-sm font-medium rounded-button transition-all duration-300 hover:shadow-[0_0_40px_rgba(0,229,255,0.2)] active:scale-98 group"
+              <button
+                onClick={handleAuthClick}
+                className="relative overflow-hidden bg-gradient-to-r from-[#00E5FF] to-[#00FFA3] text-[#0B0F17] px-5 py-2 text-sm font-bold rounded-button transition-all duration-300 hover:shadow-[0_0_40px_rgba(0,229,255,0.2)] active:scale-98 group cursor-pointer"
               >
                 <span className="relative z-10">Get started</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#7000FF] to-[#00E5FF] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00FFA3] to-[#00E5FF] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </button>
             </motion.div>
           ) : (
             <div className="relative" ref={profileMenuRef}>
@@ -240,12 +240,12 @@ export default function Navbar({
                   setProfileOpen(!isProfileOpen);
                   setProductsOpen(false);
                 }}
-                className="relative w-9 h-9 rounded-full bg-gradient-to-br from-[rgba(0,229,255,0.1)] to-[rgba(112,0,255,0.1)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center hover:border-[rgba(0,229,255,0.2)] transition-all duration-300 cursor-pointer focus:outline-hidden select-none group"
+                className="relative w-9 h-9 rounded-full bg-gradient-to-br from-[rgba(0,229,255,0.1)] to-[rgba(0,255,163,0.1)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center hover:border-[rgba(0,229,255,0.2)] transition-all duration-300 cursor-pointer focus:outline-hidden select-none group"
                 aria-expanded={isProfileOpen}
                 aria-haspopup="true"
               >
                 <span className="text-sm font-medium text-[#00E5FF] group-hover:text-white transition-colors duration-300">{userInitials}</span>
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#00E5FF]/5 to-[#7000FF]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#00E5FF]/5 to-[#00FFA3]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.button>
 
               <AnimatePresence>
@@ -326,7 +326,7 @@ export default function Navbar({
                 setMobileMenuOpen(true);
                 setProfileOpen(true);
               }}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-[rgba(0,229,255,0.1)] to-[rgba(112,0,255,0.1)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center focus:outline-hidden"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-[rgba(0,229,255,0.1)] to-[rgba(0,255,163,0.1)] border border-[rgba(255,255,255,0.05)] flex items-center justify-center focus:outline-hidden"
             >
               <span className="text-xs font-medium text-[#00E5FF]">{userInitials}</span>
             </button>
@@ -370,13 +370,15 @@ export default function Navbar({
                 <div className="h-9 w-full bg-[rgba(255,255,255,0.02)] animate-pulse rounded-button border border-[rgba(255,255,255,0.03)]" />
               ) : !isLoggedIn ? (
                 <div className="flex flex-col gap-2">
-                  <Link
-                    href="/auth?mode=signup"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full text-center py-2.5 text-sm font-medium text-white bg-gradient-to-r from-[#00E5FF] to-[#7000FF] rounded-button hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] transition-all duration-300"
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      signInWithGoogle();
+                    }}
+                    className="w-full text-center py-2.5 text-sm font-bold text-[#0B0F17] bg-gradient-to-r from-[#00E5FF] to-[#00FFA3] rounded-button hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] transition-all duration-300 cursor-pointer"
                   >
                     Get started
-                  </Link>
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -425,7 +427,10 @@ export default function Navbar({
                       Reset password
                     </Link>
                     <button
-                      onClick={handleSignOut}
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
                       className="w-full text-left py-1.5 text-sm font-medium text-[rgba(255,68,68,0.4)] hover:text-[#FF4444] transition-colors duration-200 cursor-pointer focus:outline-hidden"
                     >
                       Sign out

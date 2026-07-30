@@ -34,11 +34,7 @@ const BackgroundScene = () => {
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
-<<<<<<< HEAD
-      <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-=======
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
->>>>>>> 26d8fc9a3ab69e9c55514a8fadf62e1a863b6057
       </bufferGeometry>
       <pointsMaterial size={0.02} transparent opacity={0.3} color="#00E5FF" sizeAttenuation />
     </points>
